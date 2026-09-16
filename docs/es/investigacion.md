@@ -114,7 +114,7 @@ Se revisó solo la lista de fuentes de `csalamando/harness-sdlc`. No se copió s
 - v0.2 (hecho): paquete + zipapp incluido en el repo; recibos de aprobación verificados contra la plataforma; log de auditoría; compuertas semánticas; roster y CODEOWNERS.
 - v0.3 (hecho): sensores reales en CI (SBOM, firma, procedencia, SAST, IaC, orden test-first); reglas de arquitectura ejecutables y diff de contratos de API.
 - v0.4 (hecho): fases de descubrimiento/producto, UX, datos, FinOps, feedback y retiro; políticas de organización con excepciones que expiran y memoria; reportes de trazabilidad y DORA.
-- v0.5: `sdlc upgrade`, releases y empaquetado como plugin por agente; evals de skills entre agentes; adopción brownfield.
+- v0.5 (hecho): `sdlc upgrade`, releases y empaquetado como plugin por agente; evals de skills entre agentes; adopción brownfield.
 
 ## 7. Fuentes
 

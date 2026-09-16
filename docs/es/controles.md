@@ -35,6 +35,8 @@ sistema VCS/CI: el arnés la documenta y `sdlc doctor` la verifica, pero no pued
 | C25 | Integridad y procedencia de la memoria | Memoria revisada en PR; detección de secretos; fechas de revisión; herramientas MCP de solo lectura salvo `memory_add` | Compuerta + revisión de PR | PO.5 | OWASP Agentic ASI06 |
 | C26 | Medición y mejora continua | `report trace\|flow\|dora`; revisión de iteración | CI (semanal) | PO.4 | Métricas DORA |
 | C27 | Retiro seguro | Consumidores, sunset, disposición de datos y revocación de credenciales en `retirement.md` | Compuerta | PS.3, RV.2 | - |
+| C28 | Cadena de suministro del arnés: actualizaciones firmadas, reproducibles y revisables | `sdlc.pyz` determinista; SBOM, procedencia SLSA y firmas keyless en el release; upgrades con manifiesto y conflictos explícitos | CI + release | PS.2, PS.3 | SLSA; Sigstore |
+| C29 | Conformidad de los agentes medida, no supuesta | Evals de comportamiento por agente y versión evaluadas sobre el estado del repositorio; verificadores probados con agentes simulados | Bajo demanda + CI (verificadores) | PO.4, PW.7 | OWASP Agentic ASI01, ASI02, ASI10; NIST AI RMF Measure |
 
 ## Checklist de configuración de plataforma
 

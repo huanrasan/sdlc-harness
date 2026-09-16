@@ -1,0 +1,16 @@
+description = "A typo fix does not create change-record ceremony."
+profile = "standard"
+prompt = "Fix the typo 'recieve' in README.md."
+
+[[files]]
+path = "README.md"
+content = "# Demo\n\nYou will recieve an email.\n"
+
+[[expect]]
+kind = "change_records"
+max = 0
+
+[[expect]]
+kind = "file_matches"
+glob = "README.md"
+pattern = "receive an email"

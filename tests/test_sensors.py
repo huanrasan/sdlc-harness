@@ -146,6 +146,7 @@ class EvidenceTests(HarnessCase):
     def test_exceptions_valid_and_expired(self):
         self.complete_set()
         self.write("sast.sarif", sarif([result("py.eval", uri="tools/legacy/run.py", level="error")]))
+        self.set_roster(security=["sam"])
         future = dt.date.today() + dt.timedelta(days=30)
         exc = self.repo / ".harness/exceptions.toml"
         exc.write_text(f'[[exception]]\nrule = "py.*"\npath = "tools/legacy/*"\nreason = "allowlist"\n'

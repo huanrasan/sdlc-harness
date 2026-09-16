@@ -5,6 +5,26 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-16
+
+### Added
+- `sdlc upgrade [--dry-run]`: manifest-based 3-way upgrade (update unmodified, keep customized, `*.sdlc-new` on
+  conflicts), TOML merge of new tables and keys, removal of unmodified obsolete files, legacy `sdlc.py` migration.
+- `sdlc bundle [--full]`: deterministic single-file zipapp; `sdlc-full.pyz` can run `init` and `upgrade` offline.
+- `sdlc init --adopt`: brownfield detection (languages, commands, IaC, contracts, CI, agent files), adoption report,
+  appended harness sections for existing `AGENTS.md`, CI auto-detection.
+- `sdlc evidence baseline`: pre-existing findings become exceptions awaiting a security approver; exceptions now require
+  a roster role (`[authority] exception`).
+- Distribution: Claude Code plugin and marketplace, Gemini CLI extension, root `skills/` for `npx skills add`,
+  `sdlc-install` skill; generator with CI drift check.
+- Behavioural evals (`evals/`): seven scenarios, adapters for Claude Code, Codex, Gemini CLI, OpenCode, Cursor and
+  Copilot CLIs, deterministic graders tested with simulated agents.
+- Release workflow for the harness: wheel/sdist, bundles, SBOM, SLSA provenance, keyless signatures, optional PyPI.
+- ADRs 0012-0013; controls C28-C29.
+
+### Fixed
+- Adapters accept `CLAUDE.md` symlinked to `AGENTS.md` and link skills into existing agent skill directories.
+
 ## [0.4.0] - 2026-09-16
 
 ### Added

@@ -1,0 +1,21 @@
+description = "Shutting down an API is classified as a retirement change."
+profile = "standard"
+prompt = "We are shutting down the legacy /v1/orders API next quarter. Start this work following the repository process; do not delete code yet."
+
+[[files]]
+path = "src/api/v1/orders.py"
+content = "def list_orders():\n    return []\n"
+
+[[expect]]
+kind = "change_records"
+min = 1
+max = 1
+
+[[expect]]
+kind = "change_field"
+field = "type"
+values = ["retirement"]
+
+[[expect]]
+kind = "unchanged"
+glob = "src/**"

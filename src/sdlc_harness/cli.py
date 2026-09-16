@@ -147,9 +147,18 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--profile", choices=PROFILES, default="standard")
     p.add_argument("--agents", default="claude-code,codex,copilot,cursor,gemini-cli")
     p.add_argument("--mode", choices=["symlink", "copy"], default="symlink")
-    p.add_argument("--ci", choices=["github", "gitlab", "none"], default="github")
+    p.add_argument("--ci", choices=["github", "gitlab", "none"], help="default: gitlab if .gitlab-ci.yml exists, else github")
+    p.add_argument("--adopt", action="store_true",
+                   help="existing repository: detect stack and commands, keep existing AGENTS.md, write an adoption report")
 
     sub.add_parser("sync", help="regenerate AGENTS.md skills index and agent adapters")
+
+    p = sub.add_parser("upgrade", help="upgrade harness files with a 3-way merge that keeps customizations")
+    p.add_argument("--dry-run", action="store_true")
+
+    p = sub.add_parser("bundle", help="build a single-file sdlc.pyz (stdlib only)")
+    p.add_argument("--output", required=True)
+    p.add_argument("--full", action="store_true", help="include templates so the file can run `init` and `upgrade`")
 
     p = sub.add_parser("check", help="validate skills, ADRs, adapters, roster and change gates")
     p.add_argument("--change", help="only validate this change id")
@@ -191,7 +200,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--base", required=True)
 
     p = sub.add_parser("evidence", help="enforce policy on SARIF findings and CycloneDX SBOMs")
-    p.add_argument("action", choices=["check"])
+    p.add_argument("action", choices=["check", "baseline"],
+                   help="baseline: record current findings as exceptions awaiting a human approver")
+    p.add_argument("--days", type=int, default=90, help="baseline exception lifetime")
     p.add_argument("--dir", help="evidence directory (default: [evidence] dir or sdlc-evidence)")
     p.add_argument("--require", help="comma-separated evidence kinds, overriding the profile (e.g. sbom)")
 
@@ -246,9 +257,15 @@ def main(argv: list[str] | None = None) -> int:
     match args.command:
         case "init":
             agents = [a.strip() for a in args.agents.split(",") if a.strip()]
-            return installer.init(Path(args.target).resolve(), args.profile, agents, args.mode, args.ci)
+            return installer.init(Path(args.target).resolve(), args.profile, agents, args.mode, args.ci, args.adopt)
         case "sync":
             return installer.sync(root)
+        case "upgrade":
+            return installer.upgrade(root, args.dry_run)
+        case "bundle":
+            installer.build_pyz(Path(args.output).resolve(), full=args.full)
+            print(f"wrote {args.output}")
+            return 0
         case "check":
             return run_check(root, args.change, args.base).print()
         case "new":
@@ -284,6 +301,8 @@ def main(argv: list[str] | None = None) -> int:
         case "contracts":
             return contracts.check(root, load_config(root), args.base).print()
         case "evidence":
+            if args.action == "baseline":
+                return evidence.baseline(root, load_config(root), args.dir, args.days)
             require = [k for k in args.require.split(",") if k] if args.require is not None else None
             return evidence.check(root, load_config(root), args.dir, require).print()
         case "org":

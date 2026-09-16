@@ -35,6 +35,8 @@ the harness documents and `sdlc doctor` checks for, but cannot enforce by itself
 | C25 | Memory integrity and provenance | reviewed memory files; secret scanning; review dates; read-mostly MCP tools | Gate + PR review | PO.5 | OWASP Agentic ASI06 |
 | C26 | Measurement and continuous improvement | `report trace\|flow\|dora`; iteration review | CI (weekly) | PO.4 | DORA metrics |
 | C27 | Safe decommissioning | `retirement.md` consumers, sunset, data disposition, credential revocation | Gate | PS.3, RV.2 | - |
+| C28 | Harness supply chain: signed, reproducible, reviewable updates | deterministic `sdlc.pyz`; release SBOM, SLSA provenance, keyless signatures; manifest-based upgrades with explicit conflicts | CI + release | PS.2, PS.3 | SLSA; Sigstore |
+| C29 | Agent conformance measured, not assumed | behavioural evals per agent and version graded on repository state; graders tested against simulated agents | On demand + CI (graders) | PO.4, PW.7 | OWASP Agentic ASI01, ASI02, ASI10; NIST AI RMF Measure |
 
 ## Platform configuration checklist
 

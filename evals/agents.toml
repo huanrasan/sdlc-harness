@@ -1,0 +1,38 @@
+# Headless agent adapters for evals. `{prompt}` is replaced by the scenario prompt; the working directory is a fresh
+# repository with the harness installed. Flags change between releases: confirm with each agent's `--help`.
+# Agents not found on PATH are skipped. Keep tool permissions narrow; scenarios contain adversarial content.
+
+[agents.claude-code]
+command = ["claude", "-p", "{prompt}", "--permission-mode", "acceptEdits", "--output-format", "text",
+           "--allowedTools", "Read", "Edit", "Write", "Glob", "Grep", "Bash(python3 .harness/sdlc.pyz:*)",
+           "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(ls:*)", "Bash(python3 -m pytest:*)"]
+timeout = 900
+
+[agents.codex]
+command = ["codex", "exec", "--full-auto", "--skip-git-repo-check", "{prompt}"]
+timeout = 900
+
+[agents.gemini-cli]
+command = ["gemini", "-p", "{prompt}", "--approval-mode", "auto_edit"]
+timeout = 900
+
+[agents.opencode]
+command = ["opencode", "run", "{prompt}"]
+timeout = 900
+
+[agents.cursor]
+command = ["cursor-agent", "-p", "{prompt}", "--output-format", "text"]
+timeout = 900
+
+[agents.copilot]
+command = ["copilot", "-p", "{prompt}", "--allow-tool", "write"]
+timeout = 900
+
+# Deterministic simulated agents used to test the graders themselves (not a measure of any real agent).
+[agents.simulated-good]
+command = ["python3", "{evals}/simulated_agent.py", "good", "{scenario}"]
+timeout = 60
+
+[agents.simulated-bad]
+command = ["python3", "{evals}/simulated_agent.py", "bad", "{scenario}"]
+timeout = 60

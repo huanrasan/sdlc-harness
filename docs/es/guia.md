@@ -10,16 +10,22 @@
 
 ## Instalar en un repositorio
 
+Elige cómo obtener la CLI (Python ≥ 3.11, sin otras dependencias):
+
+| Canal | Comando |
+|---|---|
+| pipx (recomendado) | `pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.0` y luego `sdlc ...` |
+| Archivo único, sin red | descarga `sdlc-full.pyz` del release y ejecuta `python3 sdlc-full.pyz ...` |
+| Desde el código fuente | `git clone ...` y luego `PYTHONPATH=src python3 -m sdlc_harness ...` |
+
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness.git
-sdlc init ruta/a/tu-repo --profile standard --agents claude-code,codex,copilot,cursor,gemini-cli --ci github
+sdlc init ruta/a/tu-repo --profile standard --agents claude-code,codex,copilot,cursor,gemini-cli
 cd ruta/a/tu-repo
 python3 .harness/sdlc.pyz hooks
 python3 .harness/sdlc.pyz doctor
 ```
 
-`init` nunca sobrescribe archivos existentes (lista los que omitió) e incluye la CLI en el repo como
-`.harness/sdlc.pyz` (solo biblioteca estándar), así que el repositorio destino y la CI solo necesitan Python ≥ 3.11.
+`init` nunca sobrescribe archivos existentes (lista los que omitió) e incluye la CLI en el repo como `.harness/sdlc.pyz` (solo biblioteca estándar), así que el repositorio destino y la CI solo necesitan Python ≥ 3.11.
 Después:
 
 1. Completa la sección `Project` de `AGENTS.md` (comandos de build, test y lint). Mantenla breve.
@@ -35,6 +41,35 @@ Después:
 | `--agents` | claves de `.harness/adapters.toml` | Los agentes que leen `.agents/skills` de forma nativa no necesitan archivos adicionales. |
 | `--mode` | `symlink`, `copy` | `copy` para sistemas de archivos sin symlinks; `check` detecta desincronización. |
 | `--ci` | `github`, `gitlab`, `none` | GitLab: incluye `.gitlab-ci.sdlc.yml` desde tu `.gitlab-ci.yml`. |
+| `--adopt` | flag | Repositorio existente: detección, reporte de adopción, conserva tu `AGENTS.md`. |
+
+**Repositorio existente:** agrega `--adopt`. Detecta lenguajes, comandos de build/test/lint, infraestructura como
+código, contratos de API, CI e instrucciones de agentes existentes; completa `AGENTS.md` (o agrega las secciones del
+arnés al que ya tienes), registra los contratos, enlaza las skills junto a las skills propias de tu agente y escribe
+`docs/sdlc/adoption.md` con un plan de adopción gradual. Para convertir los hallazgos previos de los escáneres en
+excepciones con vencimiento que debe firmar un aprobador de seguridad, usa `python3 .harness/sdlc.pyz evidence baseline`.
+
+**Skills por el canal de tu agente** (solo skills; las compuertas requieren la instalación en el repositorio, que la
+skill `sdlc-install` realiza si se lo pides):
+
+| Agente | Comando |
+|---|---|
+| Claude Code | `/plugin marketplace add huanrasan/sdlc-harness` y luego `/plugin install sdlc-harness@sdlc-harness` |
+| Gemini CLI | `gemini extensions install https://github.com/huanrasan/sdlc-harness` |
+| Cualquier cliente de Agent Skills (Codex, Cursor, Copilot, OpenCode, ...) | `npx skills add huanrasan/sdlc-harness` |
+
+## Actualizar
+
+```bash
+pipx upgrade sdlc-harness            # o descarga el nuevo sdlc-full.pyz
+sdlc upgrade --dry-run               # revisar
+sdlc upgrade                         # aplicar; luego integrar los *.sdlc-new y ejecutar check
+```
+
+`.harness/manifest.toml` registra lo instalado. Los archivos sin modificar se actualizan, los personalizados se conservan
+y, cuando tanto tú como el release cambiaron un archivo, la nueva versión se escribe al lado como `<archivo>.sdlc-new`.
+`harness.toml` y `roster.toml` solo reciben las tablas y claves que falten. El `.harness/sdlc.pyz` se regenera de forma
+determinista.
 
 ## Flujo diario
 
@@ -226,8 +261,17 @@ procedencia SLSA y de SBOM, firmas keyless con Sigstore y la publicación, detr�
 - **MCP (opcional)**: servidores de memoria (p. ej. engram) o de inteligencia de código (p. ej. gortex)
   complementan los change records, pero no los reemplazan.
 
-## Actualizar el arnés
+## Evals: ¿los agentes siguen el arnés?
 
-Actualiza el paquete (`pipx upgrade sdlc-harness`), ejecuta `init` en un directorio temporal y compara. Copia
-`.harness/sdlc.pyz` y las skills que no hayas personalizado. Una vez instalados, los perfiles, el roster y los
-adaptadores son tuyos. El comando `sdlc upgrade` está previsto para v0.5.
+`evals/` (en este repositorio, no se instala en los proyectos) ejecuta escenarios de comportamiento contra cualquier
+agente en modo headless y evalúa el estado resultante del repositorio: ingreso de una funcionalidad riesgosa, negarse a
+autoaprobar, no debilitar tests bajo presión, inyección de instrucciones en un issue, sin ceremonia para un typo,
+clasificación de retiros y uso de la memoria.
+
+```bash
+python3 evals/run.py --list
+python3 evals/run.py --agent claude-code --agent codex --trials 3
+```
+
+Las líneas de comando de cada agente están en `evals/agents.toml`; los resultados se escriben en `evals/results/` como
+JSON y tasas de aprobación en Markdown.

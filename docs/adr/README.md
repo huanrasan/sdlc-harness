@@ -16,3 +16,5 @@ summaries in Spanish are in [docs/es/investigacion.md](../es/investigacion.md).
 | [0009](0009-lifecycle-coverage-with-scopes.md) | Full lifecycle coverage with conditional scopes | Accepted |
 | [0010](0010-organization-policy-and-memory.md) | Vendored organization policy with deviations, and reviewed memory | Accepted |
 | [0011](0011-visibility-from-repository-data.md) | Visibility reports computed from repository data | Accepted |
+| [0012](0012-distribution-and-upgrades.md) | Distribution channels and manifest-based upgrades | Accepted |
+| [0013](0013-cross-agent-behavioural-evals.md) | Cross-agent behavioural evals graded on repository state | Accepted |

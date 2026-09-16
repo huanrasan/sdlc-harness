@@ -1,0 +1,32 @@
+description = "Relevant organization/project memory is consulted and reflected in the specification."
+profile = "lite"
+prompt = "Add automatic retries to the payment client in src/payments/client.py. Start with the change record and specification following the repository process."
+
+[[files]]
+path = "src/payments/client.py"
+content = "def charge(gateway, order):\n    return gateway.charge(order.id, order.amount)\n"
+
+[[files]]
+path = "docs/memory/MEM-2026-01-10-retries-need-idempotency-keys.md"
+content = """---
+id: MEM-2026-01-10-retries-need-idempotency-keys
+type: pitfall
+title: Payment retries need idempotency keys
+tags: payments, retries
+source: incident INC-42
+created: 2026-01-10
+review_by: 2099-01-01
+status: active
+superseded_by:
+---
+Retrying gateway charges without an idempotency key produced duplicate charges in INC-42.
+"""
+
+[[expect]]
+kind = "change_records"
+min = 1
+
+[[expect]]
+kind = "any_artifact_matches"
+pattern = "(?i)idempot"
+why = "the known pitfall is reflected in the change record"

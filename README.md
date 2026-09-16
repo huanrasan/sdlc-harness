@@ -7,7 +7,7 @@ Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf, OpenCode...) the same guide
 gates, from specification to operation, with controls that scale from a solo developer to a regulated organization.
 Stack- and cloud-agnostic: public cloud, private cloud, on-prem or air-gapped.
 
-**Status:** v0.4.0, early preview.
+**Status:** v0.5.0, early preview.
 
 ## Why
 
@@ -31,6 +31,9 @@ standards so a team can switch or mix agents without rebuilding its process.
 - **Organization policy and memory**: vendored mandatory policy with expiring deviations, reviewed memory entries,
   and an MCP server with read-mostly tools for any agent.
 - **Visibility**: traceability, delivery flow and DORA-style reports as Markdown, JSON or HTML.
+- **Distribution and upgrades**: pipx or a single offline file, Claude Code plugin marketplace, Gemini CLI
+  extension, `npx skills add`; brownfield adoption with stack detection; 3-way `sdlc upgrade` that keeps customizations.
+- **Behavioural evals** that measure whether each agent actually follows the harness.
 - **Signed releases**: SBOM, SLSA provenance and SBOM attestations, keyless Sigstore signatures (GitHub and GitLab).
 - **Profiles** `lite`, `standard` and `regulated` that require artifacts by change type and risk.
 - **Adapters** generated for agents that do not read `.agents/skills` natively.
@@ -39,8 +42,8 @@ standards so a team can switch or mix agents without rebuilding its process.
 ## Quick start
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness.git
-sdlc init ../my-service --profile standard --ci github
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.0
+sdlc init ../my-service --profile standard      # add --adopt for an existing repository
 cd ../my-service
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor
 python3 .harness/sdlc.pyz new feature payment-retries --risk medium

@@ -8,7 +8,7 @@ las mismas compuertas deterministas, desde la especificación hasta la operació
 desarrollador individual hasta una organización regulada. No depende del stack ni de la nube: funciona en nube
 pública, nube privada, on-prem o entornos air-gapped.
 
-**Estado:** v0.4.0, versión preliminar.
+**Estado:** v0.5.0, versión preliminar.
 
 ## Por qué
 
@@ -34,6 +34,10 @@ estándares abiertos para que un equipo pueda cambiar o combinar agentes sin reh
 - **Política de organización y memoria**: política obligatoria vendorizada con desviaciones que vencen, memoria
   revisada en PR y un servidor MCP con herramientas de solo lectura (salvo `memory_add`) para cualquier agente.
 - **Visibilidad**: reportes de trazabilidad, flujo de entrega y métricas estilo DORA en Markdown, JSON o HTML.
+- **Distribución y actualizaciones**: pipx o un único archivo sin red, marketplace de plugins de Claude Code,
+  extensión de Gemini CLI, `npx skills add`; adopción en repos existentes con detección del stack; `sdlc upgrade` de 3
+  vías que conserva las personalizaciones.
+- **Evals de comportamiento** que miden si cada agente realmente sigue el arnés.
 - **Releases firmados**: SBOM, attestations de procedencia SLSA y de SBOM, firmas keyless con Sigstore (GitHub y GitLab).
 - **Perfiles** `lite`, `standard` y `regulated` que exigen artefactos según el tipo y el riesgo del cambio.
 - **Adaptadores** generados para los agentes que no leen `.agents/skills` de forma nativa.
@@ -42,8 +46,8 @@ estándares abiertos para que un equipo pueda cambiar o combinar agentes sin reh
 ## Inicio rápido
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness.git
-sdlc init ../mi-servicio --profile standard --ci github
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.0
+sdlc init ../mi-servicio --profile standard      # add --adopt for an existing repository
 cd ../mi-servicio
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor
 python3 .harness/sdlc.pyz new feature payment-retries --risk medium

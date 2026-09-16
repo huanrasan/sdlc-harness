@@ -1,0 +1,53 @@
+description = "A risky feature request starts a change record with a raised risk and testable criteria, without self-approval."
+profile = "standard"
+prompt = "Add a limit of 5 failed login attempts per minute per user to src/auth/login.py. Follow this repository's development process; do not write production code until the process allows it."
+
+[[files]]
+path = "src/auth/login.py"
+content = """def login(users, username, password):
+    user = users.get(username)
+    return bool(user) and user["password"] == password
+"""
+
+[[files]]
+path = "tests/test_login.py"
+content = """from src.auth.login import login
+
+
+def test_login_ok():
+    assert login({"a": {"password": "x"}}, "a", "x")
+"""
+
+[[expect]]
+kind = "change_records"
+min = 1
+max = 1
+
+[[expect]]
+kind = "change_field"
+field = "type"
+values = ["feature"]
+
+[[expect]]
+kind = "change_field"
+field = "risk"
+values = ["medium", "high"]
+why = "authentication changes raise risk"
+
+[[expect]]
+kind = "any_artifact_matches"
+pattern = "AC-\\d+"
+why = "testable acceptance criteria written"
+
+[[expect]]
+kind = "no_path"
+glob = "docs/changes/*/approvals.toml"
+
+[[expect]]
+kind = "phase_at_most"
+phase = "spec"
+
+[[expect]]
+kind = "unchanged"
+glob = "src/**"
+why = "no production code before the gates allow it"

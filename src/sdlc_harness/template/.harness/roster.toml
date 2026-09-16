@@ -47,6 +47,8 @@ members = []
 "outcome.md" = ["product-owner"]
 # Deviations from organization policy (.harness/deviations.toml) must name an approver holding one of these roles.
 "deviation" = ["architect", "security"]
+# Sensor exceptions (.harness/exceptions.toml) must name an approver holding one of these roles.
+"exception" = ["security"]
 
 # Extra CODEOWNERS entries (path pattern -> roles), emitted before the authority-derived ones.
 [codeowners]

@@ -11,6 +11,7 @@ import fnmatch
 import json
 from pathlib import Path
 
+from . import authority
 from .core import Report, load_toml
 
 SEVERITIES = ["low", "medium", "high", "critical"]
@@ -42,16 +43,23 @@ def _location(result: dict) -> str:
     return ""
 
 
-def load_exceptions(root: Path, report: Report) -> list[dict]:
+def load_exceptions(root: Path, report: Report, cfg: dict | None = None) -> list[dict]:
     path = root / EXCEPTIONS_FILE
     if not path.exists():
         return []
     today = dt.date.today()
     valid = []
+    allowed = authority.approver_roles(cfg, "exception") if cfg else []
     for e in load_toml(path).get("exception", []):
+        if e.get("rule") and not e.get("approver"):
+            report.error(f"{EXCEPTIONS_FILE}: exception for '{e['rule']}' at '{e.get('path', '*')}' awaits a human approver")
+            continue
         missing = [k for k in ("rule", "reason", "approver", "expires") if not e.get(k)]
         if missing:
             report.error(f"{EXCEPTIONS_FILE}: exception for '{e.get('rule')}' lacks {missing}")
+            continue
+        if allowed and not any(authority.local_membership(cfg, role, e["approver"]) is not False for role in allowed):
+            report.error(f"{EXCEPTIONS_FILE}: approver '{e['approver']}' of '{e['rule']}' holds none of roles {allowed}")
             continue
         expires = e["expires"] if isinstance(e["expires"], dt.date) else dt.date.fromisoformat(str(e["expires"]))
         if expires < today:
@@ -142,7 +150,7 @@ def check(root: Path, cfg: dict, directory: str | None = None, require: list[str
     if threshold not in SEVERITIES:
         report.error(f"harness.toml [evidence] fail_on must be one of {SEVERITIES}")
         return report
-    exceptions = load_exceptions(root, report)
+    exceptions = load_exceptions(root, report, cfg)
     files = sorted(base.glob("*")) if base.is_dir() else []
     for kind in required:
         pattern = "sbom*.json" if kind == "sbom" else f"{kind}*.sarif"
@@ -158,3 +166,44 @@ def check(root: Path, cfg: dict, directory: str | None = None, require: list[str
             n = check_sbom(f, ev_cfg.get("license_deny", []), exceptions, report)
             print(f"{f.name}: {n} component(s)")
     return report
+
+
+def baseline(root: Path, cfg: dict, directory: str | None = None, days: int = 90) -> int:
+    """Turn current findings into exceptions without approver, so a human must review each before merge."""
+    ev_cfg = cfg.get("evidence", {})
+    base = root / (directory or ev_cfg.get("dir", "sdlc-evidence"))
+    threshold = SEVERITIES.index(ev_cfg.get("fail_on", "high"))
+    known = {(e.get("rule"), e.get("path", "*")) for e in (load_toml(root / EXCEPTIONS_FILE).get("exception", [])
+                                                           if (root / EXCEPTIONS_FILE).exists() else [])}
+    found: set[tuple[str, str]] = set()
+    for f in sorted(base.glob("*.sarif")) if base.is_dir() else []:
+        floor = "critical" if f.name.startswith("secrets") else "low"
+        for run in json.loads(f.read_text(encoding="utf-8")).get("runs", []):
+            rules = {r.get("id"): r for r in run.get("tool", {}).get("driver", {}).get("rules", [])}
+            for result in run.get("results", []):
+                if result.get("suppressions"):
+                    continue
+                sev = max(_severity(result, rules), floor, key=SEVERITIES.index)
+                if SEVERITIES.index(sev) >= threshold:
+                    found.add((result.get("ruleId", "?"), _location(result) or "*"))
+    for f in sorted(base.glob("sbom*.json")) if base.is_dir() else []:
+        data = json.loads(f.read_text(encoding="utf-8"))
+        for c in data.get("components", []):
+            for expression in _licenses(c):
+                for denied in ev_cfg.get("license_deny", []):
+                    if denied in expression.replace("(", " ").replace(")", " ").split():
+                        found.add((f"license:{denied}", c.get("purl") or f"{c.get('name')}@{c.get('version')}"))
+    new = sorted(found - known)
+    if not new:
+        print("baseline: no new findings")
+        return 0
+    expires = (dt.date.today() + dt.timedelta(days=days)).isoformat()
+    lines = [f"\n# Baseline {dt.date.today().isoformat()}: pre-existing findings. Each needs a security approver before merge."]
+    for rule, location in new:
+        lines += ["[[exception]]", f"rule = {json.dumps(rule)}", f"path = {json.dumps(location)}",
+                  'reason = "baseline: pre-existing finding recorded at adoption"', 'approver = ""',
+                  f"expires = {expires}", ""]
+    path = root / EXCEPTIONS_FILE
+    path.write_text((path.read_text(encoding="utf-8") if path.exists() else "") + "\n".join(lines), encoding="utf-8")
+    print(f"baseline: {len(new)} exception(s) added to {EXCEPTIONS_FILE}, awaiting approver")
+    return 0

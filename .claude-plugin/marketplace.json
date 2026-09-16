@@ -1,0 +1,18 @@
+{
+  "name": "sdlc-harness",
+  "owner": {
+    "name": "sdlc-harness contributors",
+    "url": "https://github.com/huanrasan/sdlc-harness"
+  },
+  "description": "Marketplace for the agent-agnostic SDLC harness",
+  "plugins": [
+    {
+      "name": "sdlc-harness",
+      "description": "Agent-agnostic SDLC harness: skills for discovery to retirement, change records, human approvals, deterministic gates and sensors.",
+      "version": "0.5.0",
+      "source": "./",
+      "license": "MIT",
+      "homepage": "https://github.com/huanrasan/sdlc-harness"
+    }
+  ]
+}

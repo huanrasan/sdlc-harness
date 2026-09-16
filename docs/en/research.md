@@ -103,7 +103,7 @@ Only the source list of `csalamando/harness-sdlc` was reviewed. None of its code
 - v0.2 (done): package + vendored zipapp; approval receipts verified by the platform; audit log; semantic gates; roster and CODEOWNERS.
 - v0.3 (done): real CI sensors (SBOM, signing, provenance, SAST, IaC, test-first order); executable architecture rules and API contract diff.
 - v0.4 (done): discovery/product, UX, data, FinOps, feedback and retirement phases; organization policies with expiring exceptions and memory; traceability and DORA reports.
-- v0.5: `sdlc upgrade`, releases and per-agent plugin packaging; cross-agent skill evals; brownfield adoption.
+- v0.5 (done): `sdlc upgrade`, releases and per-agent plugin packaging; cross-agent skill evals; brownfield adoption.
 
 ## 7. Sources
 

@@ -1,0 +1,71 @@
+name: release
+
+# Tag vX.Y.Z -> tests -> wheel/sdist + single-file bundles -> SBOM -> SLSA provenance -> keyless signatures ->
+# GitHub release. Optional PyPI trusted publishing when the repository variable PUBLISH_PYPI is "true".
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Version matches tag
+        run: |
+          version=$(python -c "import sys; sys.path.insert(0, 'src'); import sdlc_harness; print(sdlc_harness.__version__)")
+          test "v$version" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != package v$version"; exit 1; }
+      - name: Tests and distribution check
+        run: |
+          git config --global user.email ci@example.com
+          git config --global user.name ci
+          python -m unittest discover -s tests
+          python scripts/build_distribution.py --check
+      - name: Build artifacts
+        run: |
+          python -m pip install build
+          python -m build --outdir dist
+          PYTHONPATH=src python -m sdlc_harness bundle --output dist/sdlc.pyz
+          PYTHONPATH=src python -m sdlc_harness bundle --full --output dist/sdlc-full.pyz
+      - name: SBOM
+        run: docker run --rm -v "$PWD:/src" -w /src anchore/syft:latest dir:dist -o cyclonedx-json=dist/sbom.cdx.json
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "dist/*"
+      - uses: sigstore/cosign-installer@v3
+      - name: Keyless signatures
+        run: for f in dist/*; do cosign sign-blob --yes --bundle "$f.sigstore.json" "$f"; done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" dist/* --verify-tag --generate-notes
+
+  pypi:
+    needs: build
+    if: vars.PUBLISH_PYPI == 'true'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Keep only Python distributions
+        run: find dist -type f ! -name "*.whl" ! -name "*.tar.gz" -delete
+      - uses: pypa/gh-action-pypi-publish@release/v1

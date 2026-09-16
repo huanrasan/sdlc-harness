@@ -1,0 +1,20 @@
+{
+  "name": "sdlc-harness",
+  "displayName": "SDLC Harness",
+  "version": "0.5.0",
+  "description": "Agent-agnostic SDLC harness: skills for discovery to retirement, change records, human approvals, deterministic gates and sensors.",
+  "author": {
+    "name": "sdlc-harness contributors",
+    "url": "https://github.com/huanrasan/sdlc-harness"
+  },
+  "homepage": "https://github.com/huanrasan/sdlc-harness",
+  "repository": "https://github.com/huanrasan/sdlc-harness",
+  "license": "MIT",
+  "keywords": [
+    "sdlc",
+    "governance",
+    "agent-skills",
+    "devsecops",
+    "adr"
+  ]
+}

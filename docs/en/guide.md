@@ -9,9 +9,16 @@
 
 ## Install into a repository
 
+Choose one way to get the CLI (Python >= 3.11, no other dependencies):
+
+| Channel | Command |
+|---|---|
+| pipx (recommended) | `pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.0` then `sdlc ...` |
+| Single file, offline | download `sdlc-full.pyz` from the release, then `python3 sdlc-full.pyz ...` |
+| From source | `git clone ...` then `PYTHONPATH=src python3 -m sdlc_harness ...` |
+
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness.git
-sdlc init path/to/your-repo --profile standard --agents claude-code,codex,copilot,cursor,gemini-cli --ci github
+sdlc init path/to/your-repo --profile standard --agents claude-code,codex,copilot,cursor,gemini-cli
 cd path/to/your-repo
 python3 .harness/sdlc.pyz hooks
 python3 .harness/sdlc.pyz doctor
@@ -32,6 +39,34 @@ python3 .harness/sdlc.pyz doctor
 | `--agents` | keys of `.harness/adapters.toml` | Agents that read `.agents/skills` natively need no files. |
 | `--mode` | `symlink`, `copy` | `copy` for filesystems without symlinks; `check` detects drift. |
 | `--ci` | `github`, `gitlab`, `none` | GitLab: include `.gitlab-ci.sdlc.yml` from your `.gitlab-ci.yml`. |
+| `--adopt` | flag | Existing repository: detection, adoption report, keeps your `AGENTS.md`. |
+
+**Existing repository:** add `--adopt`. It detects languages, build/test/lint commands, infrastructure code, API
+contracts, CI and existing agent instructions; fills `AGENTS.md` (or appends the harness sections to your existing one),
+registers contracts, links skills next to your own agent skills, and writes `docs/sdlc/adoption.md` with a gradual
+rollout. Turn pre-existing scanner findings into time-boxed exceptions that a security approver must sign with
+`python3 .harness/sdlc.pyz evidence baseline`.
+
+**Skills through your agent's channel** (skills only; gates need the repository install, which the `sdlc-install`
+skill performs on request):
+
+| Agent | Command |
+|---|---|
+| Claude Code | `/plugin marketplace add huanrasan/sdlc-harness` then `/plugin install sdlc-harness@sdlc-harness` |
+| Gemini CLI | `gemini extensions install https://github.com/huanrasan/sdlc-harness` |
+| Any Agent Skills client (Codex, Cursor, Copilot, OpenCode, ...) | `npx skills add huanrasan/sdlc-harness` |
+
+## Upgrade
+
+```bash
+pipx upgrade sdlc-harness            # or download the new sdlc-full.pyz
+sdlc upgrade --dry-run               # review
+sdlc upgrade                         # apply, then merge any *.sdlc-new files and run check
+```
+
+`.harness/manifest.toml` records what was installed. Unmodified files are updated, customized files are kept, and when
+both you and the release changed a file the new version is written next to it as `<file>.sdlc-new`. `harness.toml` and
+`roster.toml` only gain missing tables and keys. The vendored `.harness/sdlc.pyz` is rebuilt deterministically.
 
 ## Daily workflow
 
@@ -217,8 +252,15 @@ attestations, keyless Sigstore signatures and the release itself, behind a prote
   for earlier feedback; CI stays authoritative.
 - **MCP (optional)**: memory (e.g. engram) or code intelligence (e.g. gortex) servers complement, but never replace, change records.
 
-## Updating the harness
+## Evals: do agents follow the harness?
 
-Upgrade the package (`pipx upgrade sdlc-harness`), re-run `init` into a scratch directory and compare; copy
-`.harness/sdlc.pyz` and the skills you have not customized. Profile, roster and adapter files are yours once installed.
-An `sdlc upgrade` command is planned for v0.5.
+`evals/` (in this repository, not installed in projects) runs behavioural scenarios against any headless agent and
+grades the resulting repository state: risky feature intake, refusing self-approval, not weakening tests under
+pressure, prompt injection in an issue, no ceremony for typo fixes, retirement classification, and memory use.
+
+```bash
+python3 evals/run.py --list
+python3 evals/run.py --agent claude-code --agent codex --trials 3
+```
+
+Agent command lines live in `evals/agents.toml`; results are written to `evals/results/` as JSON and Markdown pass rates.

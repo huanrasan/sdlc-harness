@@ -21,12 +21,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - name: Unit tests
+      - name: Unit tests (includes graders against simulated agents)
         run: |
           git config --global user.email ci@example.com
           git config --global user.name ci
           python -m unittest discover -s tests -v
-      - name: Install from wheel and run gates in every profile
+      - name: Distribution packages in sync (skills/, Claude Code plugin, Gemini extension)
+        run: python scripts/build_distribution.py --check
+      - name: Install from wheel, init every profile, upgrade is a no-op
         run: |
           python -m pip install .
           for profile in lite standard regulated; do
@@ -34,4 +36,12 @@ jobs:
             git init -q "$dir"
             sdlc init "$dir" --profile "$profile" --agents claude-code,codex,copilot,cursor,gemini-cli,windsurf,opencode
             python "$dir/.harness/sdlc.pyz" --root "$dir" check
+            sdlc --root "$dir" upgrade | tee "$RUNNER_TEMP/upgrade-$profile.txt"
+            ! grep -q "sdlc-new" "$RUNNER_TEMP/upgrade-$profile.txt"
           done
+      - name: Full single-file bundle can init without the package
+        run: |
+          PYTHONPATH=src python -m sdlc_harness bundle --full --output "$RUNNER_TEMP/sdlc-full.pyz"
+          git init -q "$RUNNER_TEMP/bundle-demo"
+          python -I "$RUNNER_TEMP/sdlc-full.pyz" init "$RUNNER_TEMP/bundle-demo" --profile lite
+          python -I "$RUNNER_TEMP/bundle-demo/.harness/sdlc.pyz" --root "$RUNNER_TEMP/bundle-demo" check
