@@ -8,7 +8,7 @@ las mismas compuertas deterministas, desde la especificación hasta la operació
 desarrollador individual hasta una organización regulada. No depende del stack ni de la nube: funciona en nube
 pública, nube privada, on-prem o entornos air-gapped.
 
-**Estado:** v0.2.0, versión preliminar.
+**Estado:** v0.3.0, versión preliminar.
 
 ## Por qué
 
@@ -26,6 +26,11 @@ estándares abiertos para que un equipo pueda cambiar o combinar agentes sin reh
   una CLI sin dependencias incluida en cada repositorio, idéntica en git hooks y en CI (GitHub Actions y GitLab).
 - **Aprobaciones humanas ligadas al contenido**: recibos SHA-256 por artefacto, roles y matriz de autoridad, generación
   de CODEOWNERS, separación de funciones, verificación contra la plataforma en CI y log de auditoría encadenado por hash.
+- **Sensores deterministas**: orden test-first y detección de tests debilitados a partir de la historia de git, reglas
+  de capas ejecutables con referencia a ADRs, detección de cambios incompatibles en OpenAPI/AsyncAPI y una política
+  única sobre cualquier escáner SARIF y SBOM CycloneDX (umbral de severidad, licencias prohibidas, excepciones con
+  vencimiento).
+- **Releases firmados**: SBOM, attestations de procedencia SLSA y de SBOM, firmas keyless con Sigstore (GitHub y GitLab).
 - **Perfiles** `lite`, `standard` y `regulated` que exigen artefactos según el tipo y el riesgo del cambio.
 - **Adaptadores** generados para los agentes que no leen `.agents/skills` de forma nativa.
 - **Matriz de controles** mapeada a NIST SSDF, SLSA, OWASP Agentic Top 10, DORA y marcos de gobierno de IA.

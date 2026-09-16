@@ -1,0 +1,9 @@
+# Time-boxed exceptions to sensor findings (SARIF rules or denied licenses). Owned by security (CODEOWNERS).
+# Expired exceptions fail the gate; exceptions longer than 180 days produce a warning.
+#
+# [[exception]]
+# rule = "semgrep.python.lang.security.audit.eval-detected"   # SARIF ruleId (globs allowed) or "license:<SPDX id>"
+# path = "tools/legacy/*.py"                                  # file glob (or package purl for licenses); default "*"
+# reason = "Input is a fixed allowlist; tracked in ISSUE-123"
+# approver = "sam"
+# expires = 2026-12-31

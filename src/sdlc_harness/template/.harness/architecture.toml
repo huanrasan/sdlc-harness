@@ -1,0 +1,21 @@
+# Executable architecture rules, checked by `sdlc check` and `sdlc arch`.
+# Layers: `paths` are globs of files that belong to the layer; `modules` are import prefixes other code uses to
+# reach it (e.g. "app.domain", "@/domain", "github.com/acme/svc/domain", "com.acme.domain").
+# Rules: forbid_layers / allow_layers between layers, forbid_imports for third-party modules. Cite the ADR.
+#
+# Example (hexagonal):
+# [[layers]]
+# name = "domain"
+# paths = ["src/app/domain/**"]
+# modules = ["app.domain"]
+#
+# [[layers]]
+# name = "adapters"
+# paths = ["src/app/adapters/**"]
+# modules = ["app.adapters"]
+#
+# [[rules]]
+# layer = "domain"
+# forbid_layers = ["adapters"]
+# forbid_imports = ["requests", "sqlalchemy", "boto3"]
+# adr = "docs/adr/0001-hexagonal-architecture.md"

@@ -89,6 +89,29 @@ did not author the pull request or the artifact. Every change also keeps a hash-
 edits to existing events. GitLab projects must enable "Remove all approvals when commits are added"; team checks need
 a token with organization read access (`SDLC_APPROVALS_TOKEN` secret on GitHub, `GITLAB_TOKEN` on GitLab).
 
+## Sensors
+
+`check --base <ref>` (what CI runs on pull requests) adds history and structure sensors. Each has a level per profile
+(`[sensors]` in `.harness/profiles/<profile>.toml`: `error`, `warn` or `off`).
+
+| Sensor | What it enforces | Escape hatch |
+|---|---|---|
+| Test-first (`sdlc tdd`) | `feat`/`fix`/`perf` commits touching source come after, or with, a test change in the range | `TDD-Waiver: <reason>` trailer |
+| Weakened tests (`sdlc tdd`) | no added skip/ignore/only/focus markers (Python, JS/TS, JVM, Go, .NET, Rust, Ruby), no deleted test files | `Test-Waiver: <reason>` trailer |
+| Architecture (`sdlc arch`) | layer dependencies and banned imports from `.harness/architecture.toml`, citing ADRs | change the rule through an ADR |
+| Contracts (`sdlc contracts`) | no breaking change in `[contracts] files` (OpenAPI 3.x, AsyncAPI 2.x/3.x) unless `info.version` major increases | major version bump |
+| Evidence (`sdlc evidence check`) | required SARIF/SBOM files present; no finding at or above `[evidence] fail_on`; no denied licenses | `.harness/exceptions.toml` entry with reason, approver and expiry |
+
+Scanners are replaceable: anything that writes SARIF (`sdlc-evidence/<kind>.sarif`) or CycloneDX JSON
+(`sdlc-evidence/sbom*.json`) works. The `sensors` CI job ships with gitleaks, Semgrep, Trivy, Syft and Checkov
+containers; pin them by digest and mirror them for private or air-gapped CI.
+
+## Releases
+
+Tagging `v*` runs `.github/workflows/sdlc-release.yml` (or the GitLab `release-*` jobs): gates on the tagged commit,
+your `scripts/build-release`, a CycloneDX SBOM checked against the license policy, SLSA build provenance and SBOM
+attestations, keyless Sigstore signatures and the release itself, behind a protected `production` environment.
+
 ## How it works
 
 ```text
@@ -107,6 +130,7 @@ a token with organization read access (`SDLC_APPROVALS_TOKEN` secret on GitHub, 
 | `.agents/skills/` | Canonical skills (Agent Skills format), one per SDLC phase plus orchestrator and maintenance. |
 | `harness.toml` | Profile, agent targets, paths, verification settings. |
 | `.harness/roster.toml` | Roles, members, authority matrix, extra CODEOWNERS rules. |
+| `.harness/architecture.toml`, `.harness/exceptions.toml` | Executable layer rules; time-boxed sensor exceptions. |
 | `.harness/profiles/` | Gate rules per profile (editable TOML). |
 | `.harness/adapters.toml` | Declarative per-agent adapters. |
 | `.harness/sdlc.pyz`, `.harness/hooks/` | Vendored CLI and git hooks. |

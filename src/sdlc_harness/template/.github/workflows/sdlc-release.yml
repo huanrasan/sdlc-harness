@@ -1,0 +1,62 @@
+name: sdlc-release
+
+# Tag-driven release: gates -> build -> SBOM + license policy -> SLSA provenance and SBOM attestations ->
+# keyless signatures (Sigstore) -> GitHub release. Verify downstream with:
+#   gh attestation verify dist/<file> --repo <owner>/<repo>
+#   cosign verify-blob dist/<file> --bundle dist/<file>.sigstore.json \
+#     --certificate-identity-regexp 'https://github.com/<owner>/<repo>/' \
+#     --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Require human approval: create a protected "production" environment with required reviewers.
+    environment: production
+    steps:
+      # Pin third-party actions to full commit SHAs in your fork.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Gates on the tagged commit
+        run: python3 .harness/sdlc.pyz check
+      - name: Build
+        run: |
+          if [ ! -x scripts/build-release ]; then
+            echo "Create an executable scripts/build-release that writes release artifacts to dist/"; exit 1
+          fi
+          scripts/build-release
+          test -n "$(ls -A dist)"
+      - name: SBOM (CycloneDX) and license policy
+        run: |
+          mkdir -p sdlc-evidence
+          docker run --rm -v "$PWD:/src" -w /src anchore/syft:latest dir:dist -o cyclonedx-json=sdlc-evidence/sbom.json
+          python3 .harness/sdlc.pyz evidence check --require sbom
+          cp sdlc-evidence/sbom.json dist/sbom.cdx.json
+      - name: Build provenance attestation (SLSA)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "dist/*"
+      - name: SBOM attestation
+        uses: actions/attest-sbom@v2
+        with:
+          subject-path: "dist/*"
+          sbom-path: sdlc-evidence/sbom.json
+      - uses: sigstore/cosign-installer@v3
+      - name: Keyless signatures
+        run: for f in dist/*; do cosign sign-blob --yes --bundle "$f.sigstore.json" "$f"; done
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" dist/* --verify-tag --generate-notes

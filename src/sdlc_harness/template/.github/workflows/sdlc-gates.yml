@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Gates (skills, ADRs, adapters, roster, semantic checks, approval hashes)
+      - name: Gates (semantic checks, approvals, architecture, contracts, test-first, weakened tests)
         run: |
           if [ -n "${{ github.event.pull_request.base.ref }}" ]; then
             python3 .harness/sdlc.pyz check --base "origin/${{ github.event.pull_request.base.ref }}"
@@ -45,14 +45,48 @@ jobs:
             python3 .harness/sdlc.pyz commit-msg "$RUNNER_TEMP/msg" || { echo "commit $sha"; exit 1; }
           done
 
-  secrets:
+  sensors:
+    # Scanners only produce evidence (SARIF / CycloneDX); `sdlc evidence check` applies the policy from
+    # harness.toml and .harness/exceptions.toml. Pin images by digest and mirror them for private or air-gapped CI.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: gitleaks
-        run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest git /repo --redact --exit-code 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Secrets (gitleaks)
+        run: |
+          mkdir -p sdlc-evidence
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest git /repo --redact --exit-code 0 \
+            --report-format sarif --report-path /repo/sdlc-evidence/secrets.sarif
+      - name: SAST (Semgrep)
+        # p/default downloads rules from the Semgrep registry; for offline CI use --config path/to/rules/.
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:latest \
+            semgrep scan --config p/default --metrics off --sarif --output sdlc-evidence/sast.sarif
+      - name: Dependencies (Trivy)
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src aquasec/trivy:latest \
+            fs --scanners vuln --format sarif --output sdlc-evidence/sca.sarif .
+      - name: SBOM (Syft, CycloneDX)
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src anchore/syft:latest \
+            dir:. --exclude ./sdlc-evidence -o cyclonedx-json=sdlc-evidence/sbom.json
+      - name: IaC (Checkov)
+        if: hashFiles('**/*.tf', '**/Chart.yaml', '**/*.bicep', '**/cloudformation/**', '**/k8s/**') != ''
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src bridgecrew/checkov:latest -d . --quiet --soft-fail \
+            -o sarif --output-file-path sdlc-evidence
+          mv sdlc-evidence/results_sarif.sarif sdlc-evidence/iac.sarif
+      - name: Evidence policy
+        run: python3 .harness/sdlc.pyz evidence check
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sdlc-evidence
+          path: sdlc-evidence/
 
   dependencies:
     if: github.event_name == 'pull_request'
@@ -62,5 +96,5 @@ jobs:
         with:
           fail-on-severity: high
 
-  # Add stack-specific jobs here: build, tests, SAST, IaC scan, SBOM, signing and provenance.
+  # Add stack-specific jobs here: build and tests. Releases: .github/workflows/sdlc-release.yml
   # See .agents/skills/sdlc-verify/references/sensors.md

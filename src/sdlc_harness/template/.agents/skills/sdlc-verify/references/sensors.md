@@ -1,7 +1,8 @@
 # Verification sensors (examples, pick what fits the stack)
 
 Prefer open-source, self-hostable tools so the same gates run in public cloud, private cloud and air-gapped CI.
-These are examples, not endorsements; the organization's approved list wins.
+These are examples, not endorsements; the organization's approved list wins. The harness only needs their output as
+SARIF (`sdlc-evidence/<kind>.sarif`: secrets, sast, sca, iac, container, dast) or CycloneDX JSON (`sdlc-evidence/sbom.json`).
 
 | Concern | Examples |
 |---|---|

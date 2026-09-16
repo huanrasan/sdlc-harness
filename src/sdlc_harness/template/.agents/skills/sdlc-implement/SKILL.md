@@ -20,7 +20,13 @@ metadata:
 ## Rules
 
 - Surgical changes. No speculative abstractions, no unrelated refactors, no error handling for impossible cases.
-- Never weaken a failing check to make progress. Find the root cause or stop and report.
+- Never weaken a failing check to make progress. Find the root cause or stop and report. CI flags added
+  skip/ignore/only markers and deleted test files; only a human may justify one with a `Test-Waiver: <reason>` trailer.
+- Test-first is checked from history: commit the test (or test + code) before or with the behaviour change.
+  Pure refactors use `refactor:` commits. A `TDD-Waiver: <reason>` trailer is for humans to justify rare exceptions.
+- Respect `.harness/architecture.toml`: run `python3 .harness/sdlc.pyz arch` after adding imports across modules.
+- API contracts listed in `harness.toml [contracts]` must stay backward compatible; a breaking change needs an ADR
+  and a major `info.version` bump (`python3 .harness/sdlc.pyz contracts --base origin/main`).
 - Infrastructure: plan/preview before apply (`terraform plan`, `tofu plan`, `pulumi preview`, `helm diff`);
   applying to shared or production environments is a human action.
 - Dependencies: prefer existing ones; for a new dependency record license, maintenance status and why it is needed.

@@ -11,3 +11,5 @@ summaries in Spanish are in [docs/es/investigacion.md](../es/investigacion.md).
 | [0004](0004-risk-proportional-profiles.md) | Risk-proportional profiles and file-based change records | Accepted |
 | [0005](0005-package-with-vendored-zipapp.md) | Python package with a vendored zipapp | Accepted |
 | [0006](0006-approval-receipts-verified-by-platform.md) | Approval receipts bound to content and verified by the VCS platform | Accepted |
+| [0007](0007-sensor-evidence-via-sarif-and-cyclonedx.md) | Sensor evidence via SARIF and CycloneDX, policy in the harness | Accepted |
+| [0008](0008-executable-architecture-and-contract-compatibility.md) | Executable architecture rules and API contract compatibility | Accepted |

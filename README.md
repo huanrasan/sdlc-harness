@@ -7,7 +7,7 @@ Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf, OpenCode...) the same guide
 gates, from specification to operation, with controls that scale from a solo developer to a regulated organization.
 Stack- and cloud-agnostic: public cloud, private cloud, on-prem or air-gapped.
 
-**Status:** v0.2.0, early preview.
+**Status:** v0.3.0, early preview.
 
 ## Why
 
@@ -24,6 +24,10 @@ standards so a team can switch or mix agents without rebuilding its process.
   CLI vendored into each repository, identical in git hooks and CI (GitHub Actions and GitLab).
 - **Human approvals bound to content**: SHA-256 receipts per artifact, roles and authority matrix, CODEOWNERS
   generation, separation of duties, platform-verified in CI, and a hash-chained audit log.
+- **Deterministic sensors**: test-first ordering and weakened-test detection from git history, executable layer
+  rules citing ADRs, OpenAPI/AsyncAPI breaking-change detection, and a single policy over any SARIF scanner and
+  CycloneDX SBOM (severity threshold, license deny list, expiring exceptions).
+- **Signed releases**: SBOM, SLSA provenance and SBOM attestations, keyless Sigstore signatures (GitHub and GitLab).
 - **Profiles** `lite`, `standard` and `regulated` that require artifacts by change type and risk.
 - **Adapters** generated for agents that do not read `.agents/skills` natively.
 - **Controls matrix** mapped to NIST SSDF, SLSA, OWASP Agentic Top 10, DORA and AI governance frameworks.

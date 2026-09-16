@@ -1,6 +1,6 @@
 # SDLC harness configuration. Docs: https://github.com/<owner>/sdlc-harness
 [harness]
-version = "0.2.0"
+version = "0.3.0"
 # lite | standard | regulated  (see .harness/profiles/)
 profile = "standard"
 agents_md_max_lines = 150
@@ -20,3 +20,21 @@ templates = "docs/sdlc/templates"
 [verification]
 # Globs of test sources. When set, test names cited in verification.md (in `backticks`) must exist there.
 test_paths = []
+
+[tdd]
+# Globs (fnmatch). Empty test_globs uses common conventions for Python, JS/TS, Go, JVM, .NET and Ruby.
+# Empty source_globs treats any file with a code extension outside docs/ and harness folders as source.
+test_globs = []
+source_globs = []
+
+[contracts]
+# OpenAPI 3.x / AsyncAPI 2.x-3.x documents (YAML or JSON). Breaking changes require a major info.version bump.
+files = []
+
+[evidence]
+# Scanners write SARIF (<kind>*.sarif) and CycloneDX JSON (sbom*.json) here; see the sdlc-gates workflow.
+dir = "sdlc-evidence"
+# Minimum severity that fails the gate: low | medium | high | critical
+fail_on = "high"
+# SPDX identifiers denied in dependencies (checked in SBOM license data).
+license_deny = ["AGPL-1.0-only", "AGPL-1.0-or-later", "AGPL-3.0-only", "AGPL-3.0-or-later", "SSPL-1.0", "BUSL-1.1"]

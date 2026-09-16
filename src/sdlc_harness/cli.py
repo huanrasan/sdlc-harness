@@ -7,7 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from . import adapters, audit, authority, changes, installer, platform, receipts, skills
+from . import (adapters, architecture, audit, authority, changes, contracts, evidence, installer, platform,
+               receipts, skills, tdd)
 from .core import PHASES, PROFILES, RISKS, TYPES, VERSION, Report, git, load_config, paths
 
 CONVENTIONAL_RE = re.compile(
@@ -15,6 +16,28 @@ CONVENTIONAL_RE = re.compile(
 )
 ADR_FILE_RE = re.compile(r"^\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.md$")
 ADR_STATUS_RE = re.compile(r"^\*\*Status:\*\*\s*(Proposed|Accepted|Rejected|Deprecated|Superseded by \d{4})\s*$", re.M)
+
+
+def sensor_level(cfg: dict, name: str, default: str = "error") -> str:
+    return cfg["_profile"].get("sensors", {}).get(name, default)
+
+
+def apply_level(report: Report, level: str) -> Report:
+    if level == "off":
+        return Report()
+    if level == "warn":
+        return Report(errors=[], warnings=report.warnings + report.errors)
+    return report
+
+
+def run_sensors(root: Path, cfg: dict, base: str | None) -> Report:
+    report = Report()
+    report.extend(apply_level(architecture.check(root), sensor_level(cfg, "architecture")))
+    if base:
+        report.extend(apply_level(tdd.check_test_first(root, cfg, base), sensor_level(cfg, "test_first", "warn")))
+        report.extend(apply_level(tdd.check_weakened_tests(root, cfg, base), sensor_level(cfg, "weakened_tests")))
+        report.extend(apply_level(contracts.check(root, cfg, base), sensor_level(cfg, "contracts")))
+    return report
 
 
 def run_check(root: Path, only_change: str | None = None, base: str | None = None) -> Report:
@@ -28,6 +51,7 @@ def run_check(root: Path, only_change: str | None = None, base: str | None = Non
         report.extend(check_adr_files(root, p["adr"]))
         report.extend(adapters.check(root, cfg))
         report.extend(authority.check_roster(cfg, strict=False))
+        report.extend(run_sensors(root, cfg, base))
     base_dir = root / p["changes"]
     if only_change:
         report.extend(changes.check_change(root, changes.change_dir(root, cfg, only_change), cfg))
@@ -155,6 +179,19 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("action", choices=["verify"])
     p.add_argument("--base", help="also enforce append-only against this git ref")
 
+    p = sub.add_parser("tdd", help="test-first ordering and weakened tests over base..HEAD")
+    p.add_argument("--base", required=True)
+
+    sub.add_parser("arch", help="check layer dependencies from .harness/architecture.toml")
+
+    p = sub.add_parser("contracts", help="detect breaking changes in API contracts against a base ref")
+    p.add_argument("--base", required=True)
+
+    p = sub.add_parser("evidence", help="enforce policy on SARIF findings and CycloneDX SBOMs")
+    p.add_argument("action", choices=["check"])
+    p.add_argument("--dir", help="evidence directory (default: [evidence] dir or sdlc-evidence)")
+    p.add_argument("--require", help="comma-separated evidence kinds, overriding the profile (e.g. sbom)")
+
     p = sub.add_parser("codeowners", help="generate CODEOWNERS from .harness/roster.toml")
     p.add_argument("--check", action="store_true", help="fail if CODEOWNERS is out of date")
 
@@ -199,6 +236,18 @@ def main(argv: list[str] | None = None) -> int:
                 if args.base:
                     report.extend(audit.verify_append_only(root, log, args.base))
             return report.print()
+        case "tdd":
+            cfg = load_config(root)
+            report = tdd.check_test_first(root, cfg, args.base).extend(tdd.check_weakened_tests(root, cfg, args.base))
+            return report.print()
+        case "arch":
+            load_config(root)
+            return architecture.check(root).print()
+        case "contracts":
+            return contracts.check(root, load_config(root), args.base).print()
+        case "evidence":
+            require = [k for k in args.require.split(",") if k] if args.require is not None else None
+            return evidence.check(root, load_config(root), args.dir, require).print()
         case "codeowners":
             return cmd_codeowners(root, args.check)
         case "commit-msg":

@@ -22,7 +22,9 @@ Goal: make the important decisions explicit, reversible where possible, and revi
 5. Portability: keep provider-specific services behind an interface or record the lock-in trade-off in the ADR.
    Describe infrastructure as code (Terraform/OpenTofu, Pulumi, Crossplane, Helm, etc.) as expected
    artefacts; policy-as-code (OPA/Conftest, Kyverno, Checkov) for guardrails.
-6. List who must give advice (owning teams, security, platform, data) in the ADR. Seeking advice is
+6. Make structural decisions executable: add or update layers and rules in `.harness/architecture.toml`
+   citing the ADR, and register API contracts (OpenAPI/AsyncAPI) in `harness.toml [contracts]`.
+7. List who must give advice (owning teams, security, platform, data) in the ADR. Seeking advice is
    required; consensus is not. The accountable human decides.
 
 ## Anti-patterns

@@ -2,7 +2,7 @@
 # Works on self-managed GitLab in private clouds; mirror images to an internal registry if air-gapped.
 # Approval verification requires: project setting "Remove all approvals when commits are added" and a
 # GITLAB_TOKEN CI variable (read_api scope).
-stages: [harness]
+stages: [harness, release]
 
 sdlc-gates:
   stage: harness
@@ -28,10 +28,99 @@ sdlc-gates:
       fi
     - python3 .harness/sdlc.pyz codeowners --check
 
-secrets:
+sensors:
+  # Scanners only produce evidence; `sdlc evidence check` applies the policy. Mirror images for air-gapped runners.
   stage: harness
-  image:
-    name: ghcr.io/gitleaks/gitleaks:latest
-    entrypoint: [""]
+  image: python:3.12-slim
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
-    - gitleaks git . --redact --exit-code 1
+    - python3 .harness/sdlc.pyz evidence check
+  needs: [secrets-scan, sast-scan, sca-scan, sbom]
+
+.evidence:
+  stage: harness
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  artifacts:
+    when: always
+    paths: [sdlc-evidence/]
+
+secrets-scan:
+  extends: .evidence
+  image: { name: "ghcr.io/gitleaks/gitleaks:latest", entrypoint: [""] }
+  script:
+    - mkdir -p sdlc-evidence
+    - gitleaks git . --redact --exit-code 0 --report-format sarif --report-path sdlc-evidence/secrets.sarif
+
+sast-scan:
+  extends: .evidence
+  image: semgrep/semgrep:latest
+  script:
+    - mkdir -p sdlc-evidence
+    # p/default needs the Semgrep registry; for offline runners use --config path/to/rules/.
+    - semgrep scan --config p/default --metrics off --sarif --output sdlc-evidence/sast.sarif
+
+sca-scan:
+  extends: .evidence
+  image: { name: "aquasec/trivy:latest", entrypoint: [""] }
+  script:
+    - mkdir -p sdlc-evidence
+    - trivy fs --scanners vuln --format sarif --output sdlc-evidence/sca.sarif .
+
+sbom:
+  extends: .evidence
+  image: { name: "anchore/syft:debug", entrypoint: [""] }
+  script:
+    - mkdir -p sdlc-evidence
+    - /syft dir:. -o cyclonedx-json=sdlc-evidence/sbom.json
+
+# Tag-driven release: gates + build -> SBOM -> license policy -> keyless signing with Sigstore (GitLab OIDC).
+# Self-managed without public Sigstore: point cosign at your Fulcio/Rekor instance or use KMS-backed keys.
+.release:
+  stage: release
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v/
+  artifacts:
+    paths: [dist/, sdlc-evidence/]
+
+release-build:
+  extends: .release
+  image: python:3.12-slim
+  variables:
+    RUNNER_GENERATE_ARTIFACTS_METADATA: "true"
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git >/dev/null
+  script:
+    - python3 .harness/sdlc.pyz check
+    - test -x scripts/build-release || { echo "Create scripts/build-release writing artifacts to dist/"; exit 1; }
+    - scripts/build-release
+
+release-sbom:
+  extends: .release
+  needs: [release-build]
+  image: { name: "anchore/syft:debug", entrypoint: [""] }
+  script:
+    - mkdir -p sdlc-evidence
+    - /syft dir:dist -o cyclonedx-json=sdlc-evidence/sbom.json
+
+release-policy:
+  extends: .release
+  needs: [release-sbom]
+  image: python:3.12-slim
+  script:
+    - python3 .harness/sdlc.pyz evidence check --require sbom
+    - cp sdlc-evidence/sbom.json dist/sbom.cdx.json
+
+release-sign:
+  extends: .release
+  needs: [release-policy]
+  image: { name: "gcr.io/projectsigstore/cosign:v2.4.1-dev", entrypoint: [""] }
+  environment: production
+  id_tokens:
+    SIGSTORE_ID_TOKEN:
+      aud: sigstore
+  script:
+    - for f in dist/*; do cosign sign-blob --yes --identity-token "$SIGSTORE_ID_TOKEN" --bundle "$f.sigstore.json" "$f"; done

@@ -38,5 +38,14 @@ phase = "verify"
 types = ["fix", "feature", "architecture"]
 min_risk = "medium"
 
+[sensors]
+# error | warn | off. test_first, weakened_tests and contracts run when a base ref is given (CI: check --base).
+test_first = "off"
+weakened_tests = "warn"
+architecture = "error"
+contracts = "error"
+# Evidence files `sdlc evidence check` requires in the evidence directory (see harness.toml [evidence]).
+require_evidence = []
+
 [commits]
 require_trailers = []

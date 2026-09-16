@@ -94,6 +94,29 @@ exactamente ese contenido y el recibo, que pertenece al rol (directamente o medi
 "Remove all approvals when commits are added". La verificación de equipos necesita un token con lectura de la
 organización (secreto `SDLC_APPROVALS_TOKEN` en GitHub, `GITLAB_TOKEN` en GitLab).
 
+## Sensores
+
+`check --base <ref>` (lo que ejecuta la CI en los pull requests) agrega sensores de historia y de estructura. Cada uno
+tiene un nivel por perfil (`[sensors]` en `.harness/profiles/<perfil>.toml`: `error`, `warn` u `off`).
+
+| Sensor | Qué impone | Vía de excepción |
+|---|---|---|
+| Test-first (`sdlc tdd`) | los commits `feat`/`fix`/`perf` que tocan código fuente van después de un cambio de tests del rango, o junto con él | trailer `TDD-Waiver: <motivo>` |
+| Tests debilitados (`sdlc tdd`) | sin nuevos marcadores skip/ignore/only/focus (Python, JS/TS, JVM, Go, .NET, Rust, Ruby) ni archivos de test borrados | trailer `Test-Waiver: <motivo>` |
+| Arquitectura (`sdlc arch`) | dependencias entre capas e imports prohibidos definidos en `.harness/architecture.toml`, con referencia al ADR | cambiar la regla mediante un ADR |
+| Contratos (`sdlc contracts`) | sin cambios incompatibles en `[contracts] files` (OpenAPI 3.x, AsyncAPI 2.x/3.x) salvo que suba el major de `info.version` | subir la versión major |
+| Evidencia (`sdlc evidence check`) | archivos SARIF/SBOM requeridos presentes; ningún hallazgo igual o superior a `[evidence] fail_on`; ninguna licencia prohibida | entrada en `.harness/exceptions.toml` con motivo, aprobador y vencimiento |
+
+Los escáneres son reemplazables: sirve cualquiera que escriba SARIF (`sdlc-evidence/<tipo>.sarif`) o CycloneDX JSON
+(`sdlc-evidence/sbom*.json`). El job `sensors` de CI incluye contenedores de gitleaks, Semgrep, Trivy, Syft y Checkov;
+fíjalos por digest y replícalos en un registro interno para CI privada o air-gapped.
+
+## Releases
+
+Crear un tag `v*` ejecuta `.github/workflows/sdlc-release.yml` (o los jobs `release-*` de GitLab): compuertas sobre el
+commit etiquetado, tu `scripts/build-release`, SBOM CycloneDX validado contra la política de licencias, attestations de
+procedencia SLSA y de SBOM, firmas keyless con Sigstore y la publicación, detrás de un entorno protegido `production`.
+
 ## Cómo funciona
 
 ```text
@@ -112,6 +135,7 @@ organización (secreto `SDLC_APPROVALS_TOKEN` en GitHub, `GITLAB_TOKEN` en GitLa
 | `.agents/skills/` | Skills canónicas (formato Agent Skills): una por fase del SDLC, más el orquestador y el mantenimiento. |
 | `harness.toml` | Perfil, agentes destino, rutas y configuración de verificación. |
 | `.harness/roster.toml` | Roles, miembros, matriz de autoridad y reglas extra de CODEOWNERS. |
+| `.harness/architecture.toml`, `.harness/exceptions.toml` | Reglas de capas ejecutables; excepciones de sensores con vencimiento. |
 | `.harness/profiles/` | Reglas de compuerta por perfil (TOML editable). |
 | `.harness/adapters.toml` | Adaptadores declarativos por agente. |
 | `.harness/sdlc.pyz`, `.harness/hooks/` | CLI incluida en el repo y git hooks. |

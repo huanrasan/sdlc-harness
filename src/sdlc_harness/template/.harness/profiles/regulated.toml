@@ -73,6 +73,16 @@ types = ["feature", "architecture"]
 min_risk = "medium"
 approve = true
 
+[sensors]
+# error | warn | off. test_first, weakened_tests and contracts run when a base ref is given (CI: check --base).
+test_first = "error"
+weakened_tests = "error"
+architecture = "error"
+contracts = "error"
+# Evidence files `sdlc evidence check` requires in the evidence directory (see harness.toml [evidence]).
+# Add "iac" and "container" when the repository contains infrastructure code or images.
+require_evidence = ["secrets", "sast", "sca", "sbom"]
+
 [commits]
 # Traceability: every commit names its change record (or "none" for chores).
 require_trailers = ["Change"]
