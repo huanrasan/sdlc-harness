@@ -1,0 +1,9 @@
+# Rename to CODEOWNERS and replace the placeholder teams. Combine with branch protection
+# ("require review from Code Owners") so that humans approve specs, decisions and harness changes.
+*                       @your-org/maintainers
+/docs/changes/          @your-org/tech-leads
+/docs/adr/              @your-org/architecture
+/harness.toml           @your-org/platform @your-org/security
+/.harness/              @your-org/platform @your-org/security
+/.agents/               @your-org/platform
+/.github/workflows/     @your-org/platform @your-org/security

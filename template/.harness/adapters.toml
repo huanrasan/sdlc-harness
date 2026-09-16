@@ -1,0 +1,26 @@
+# Agent adapters. The canonical sources are AGENTS.md and .agents/skills/ (Agent Skills spec).
+# Each adapter only adds what an agent cannot read natively. Discovery paths change often:
+# confirm against your agent's docs and open a PR if an entry is outdated (last reviewed 2026-09).
+
+[adapters.codex]
+# Reads AGENTS.md and .agents/skills natively.
+
+[adapters.copilot]
+# Reads AGENTS.md and .agents/skills natively (Copilot coding agent / CLI).
+
+[adapters.cursor]
+# Reads AGENTS.md and .agents/skills natively.
+
+[adapters.opencode]
+# Reads AGENTS.md and .agents/skills natively.
+
+[adapters.claude-code]
+files = [{ path = "CLAUDE.md", content = "@AGENTS.md\n" }]
+links = [{ path = ".claude/skills", target = ".agents/skills" }]
+
+[adapters.gemini-cli]
+files = [{ path = "GEMINI.md", content = "@AGENTS.md\n" }]
+links = [{ path = ".gemini/skills", target = ".agents/skills" }]
+
+[adapters.windsurf]
+links = [{ path = ".windsurf/skills", target = ".agents/skills" }]

@@ -1,0 +1,33 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.11", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Pin to full commit SHAs before the first release (OpenSSF Scorecard: Pinned-Dependencies).
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Install template in every profile and run gates
+        run: |
+          for profile in lite standard regulated; do
+            dir="$RUNNER_TEMP/demo-$profile"
+            git init -q "$dir"
+            python cli/sdlc.py init "$dir" --profile "$profile" --agents claude-code,codex,copilot,cursor,gemini-cli,windsurf,opencode
+            python "$dir/.harness/sdlc.py" --root "$dir" check
+          done
