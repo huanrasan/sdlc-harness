@@ -8,7 +8,7 @@ las mismas compuertas deterministas, desde la especificación hasta la operació
 desarrollador individual hasta una organización regulada. No depende del stack ni de la nube: funciona en nube
 pública, nube privada, on-prem o entornos air-gapped.
 
-**Estado:** v0.1.0, versión preliminar.
+**Estado:** v0.2.0, versión preliminar.
 
 ## Por qué
 
@@ -22,8 +22,10 @@ estándares abiertos para que un equipo pueda cambiar o combinar agentes sin reh
   implementación, verificación, revisión, release, operación y mantenimiento.
 - **Change records** (`docs/changes/<id>/`) con plantillas: la evidencia vive junto al código y sobrevive a los
   reinicios de contexto.
-- **Compuertas de fase** mediante una CLI de un solo archivo y sin dependencias (`sdlc`), idéntica en git hooks y en
-  CI (GitHub Actions y GitLab).
+- **Compuertas de fase** que verifican consistencia (criterios trazados a tests, amenazas a controles), ejecutadas por
+  una CLI sin dependencias incluida en cada repositorio, idéntica en git hooks y en CI (GitHub Actions y GitLab).
+- **Aprobaciones humanas ligadas al contenido**: recibos SHA-256 por artefacto, roles y matriz de autoridad, generación
+  de CODEOWNERS, separación de funciones, verificación contra la plataforma en CI y log de auditoría encadenado por hash.
 - **Perfiles** `lite`, `standard` y `regulated` que exigen artefactos según el tipo y el riesgo del cambio.
 - **Adaptadores** generados para los agentes que no leen `.agents/skills` de forma nativa.
 - **Matriz de controles** mapeada a NIST SSDF, SLSA, OWASP Agentic Top 10, DORA y marcos de gobierno de IA.
@@ -31,11 +33,11 @@ estándares abiertos para que un equipo pueda cambiar o combinar agentes sin reh
 ## Inicio rápido
 
 ```bash
-git clone https://github.com/huanrasan/sdlc-harness.git
-python3 sdlc-harness/cli/sdlc.py init ../mi-servicio --profile standard --ci github
+pipx install git+https://github.com/huanrasan/sdlc-harness.git
+sdlc init ../mi-servicio --profile standard --ci github
 cd ../mi-servicio
-python3 .harness/sdlc.py hooks && python3 .harness/sdlc.py doctor
-python3 .harness/sdlc.py new feature payment-retries --risk medium
+python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor
+python3 .harness/sdlc.pyz new feature payment-retries --risk medium
 ```
 
 Luego pídele a tu agente que trabaje en el cambio: `AGENTS.md` lo dirige a la skill `sdlc-orchestrator`.

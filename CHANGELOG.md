@@ -5,6 +5,26 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-16
+
+### Added
+- Approval receipts (`sdlc approve`) bound to the SHA-256 of each artifact; edits invalidate approvals.
+- `sdlc approvals verify`: GitHub/GitLab API verification of approver identity, approved content, role membership
+  (including teams) and separation of duties.
+- Hash-chained, append-only `audit.jsonl` per change (`sdlc audit verify`, `check --base`).
+- Semantic gates for spec, design, threat model, plan, verification, review, release, runbook and ADRs.
+- `.harness/roster.toml` with roles and authority matrix; `sdlc codeowners [--check]`.
+- `approve = true` rules in profiles; `[verification] test_paths` to require cited tests to exist.
+- ADRs 0005 and 0006.
+
+### Changed
+- CLI is now the `sdlc_harness` package (pipx/pip installable); `init` vendors `.harness/sdlc.pyz` into target repos
+  instead of `.harness/sdlc.py`. ADR 0003 superseded by 0005.
+- CI templates run approvals verification, CODEOWNERS drift check and append-only audit checks.
+
+### Removed
+- `.github/CODEOWNERS.example` (generated from the roster instead).
+
 ## [0.1.0] - 2026-09-16
 
 ### Added

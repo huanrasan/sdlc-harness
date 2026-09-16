@@ -7,5 +7,7 @@ summaries in Spanish are in [docs/es/investigacion.md](../es/investigacion.md).
 |---|---|---|
 | [0001](0001-agent-agnostic-core.md) | Use AGENTS.md and Agent Skills as the agent-agnostic core | Accepted |
 | [0002](0002-deterministic-gates-outside-agent.md) | Enforce gates with git hooks and CI, not agent hooks | Accepted |
-| [0003](0003-stdlib-python-cli-toml.md) | Stdlib-only Python CLI with TOML configuration | Accepted |
+| [0003](0003-stdlib-python-cli-toml.md) | Stdlib-only Python CLI with TOML configuration | Superseded by 0005 |
 | [0004](0004-risk-proportional-profiles.md) | Risk-proportional profiles and file-based change records | Accepted |
+| [0005](0005-package-with-vendored-zipapp.md) | Python package with a vendored zipapp | Accepted |
+| [0006](0006-approval-receipts-verified-by-platform.md) | Approval receipts bound to content and verified by the VCS platform | Accepted |

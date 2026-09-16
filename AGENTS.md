@@ -4,21 +4,23 @@ Instructions for AI agents contributing to **sdlc-harness** itself (not the temp
 
 ## Layout
 
-- `cli/sdlc.py` - the CLI. Standard library only, Python >= 3.11. Copied verbatim into target repos by `init`.
-- `template/` - files installed into target repositories (`AGENTS.md`, `.agents/skills/`, `.harness/`, `docs/`, CI).
-- `tests/` - `unittest` suite; tests install the template into temp repos.
+- `src/sdlc_harness/` - CLI package. Standard library only, Python >= 3.11. `init` vendors it (without templates)
+  into target repos as `.harness/sdlc.pyz`.
+- `src/sdlc_harness/template/` - files installed into target repositories.
+- `tests/` - `unittest` suites; they install the template into temporary git repos.
 - `docs/en`, `docs/es` - bilingual user docs; `docs/adr` - decisions (English).
 
 ## Commands
 
 - Test: `python3 -m unittest discover -s tests`
-- Smoke install: `python3 cli/sdlc.py init /tmp/demo --profile regulated && python3 /tmp/demo/.harness/sdlc.py check`
+- Lint: `uvx pyflakes src tests`
+- Smoke install: `PYTHONPATH=src python3 -m sdlc_harness init /tmp/demo --profile regulated && python3 /tmp/demo/.harness/sdlc.pyz --root /tmp/demo check`
 
 ## Rules
 
-- No third-party dependencies in the CLI. No network access at runtime.
-- Behaviour change in the CLI -> test in `tests/test_sdlc.py`. Decision change -> new ADR (supersede, never rewrite).
+- No third-party runtime dependencies. No network access except `sdlc approvals verify` (platform API).
+- Behaviour change in the CLI -> tests. Decision change -> new ADR (supersede, never rewrite).
 - User-facing doc change -> update both `docs/en/` and `docs/es/` in the same PR.
-- Skills in `template/.agents/skills/` must follow the Agent Skills spec (name = directory, description <= 1024 chars).
+- Skills in the template must follow the Agent Skills spec (name = directory, description <= 1024 chars).
+- Never weaken approval integrity: receipts, audit logs and platform checks are security controls; add tests for bypasses.
 - Do not copy text from sources with licenses incompatible with MIT; reference ideas and cite in `ACKNOWLEDGEMENTS.md`.
-- Never mark adapter paths as verified without checking the agent's current documentation.

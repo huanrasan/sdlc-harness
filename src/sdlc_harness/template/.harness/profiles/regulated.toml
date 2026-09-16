@@ -1,0 +1,78 @@
+# regulated: organizations with audit/compliance duties. Every change leaves full evidence.
+# Pair with branch protection, CODEOWNERS approval and signed commits on the VCS platform.
+# A rule makes `artifact` mandatory once a change has moved PAST `phase`.
+# approve = true additionally requires a human receipt (`sdlc approve`) by a role from roster [authority].
+
+[[rules]]
+artifact = "spec.md"
+phase = "spec"
+types = ["fix", "feature", "architecture"]
+min_risk = "low"
+approve = true
+
+[[rules]]
+artifact = "design.md"
+phase = "design"
+types = ["feature", "architecture"]
+min_risk = "low"
+approve = true
+
+[[rules]]
+artifact = "adr"
+phase = "design"
+types = ["architecture"]
+min_risk = "low"
+approve = true
+
+[[rules]]
+artifact = "threat-model.md"
+phase = "design"
+types = ["feature"]
+min_risk = "medium"
+approve = true
+
+[[rules]]
+artifact = "threat-model.md"
+phase = "design"
+types = ["architecture"]
+min_risk = "low"
+approve = true
+
+[[rules]]
+artifact = "plan.md"
+phase = "plan"
+types = ["fix", "feature", "architecture"]
+min_risk = "low"
+approve = true
+
+[[rules]]
+artifact = "verification.md"
+phase = "verify"
+types = ["fix", "feature", "architecture"]
+min_risk = "low"
+approve = true
+
+[[rules]]
+artifact = "review.md"
+phase = "review"
+types = ["fix", "feature", "architecture"]
+min_risk = "low"
+approve = true
+
+[[rules]]
+artifact = "release.md"
+phase = "release"
+types = ["fix", "feature", "architecture"]
+min_risk = "low"
+approve = true
+
+[[rules]]
+artifact = "runbook.md"
+phase = "release"
+types = ["feature", "architecture"]
+min_risk = "medium"
+approve = true
+
+[commits]
+# Traceability: every commit names its change record (or "none" for chores).
+require_trailers = ["Change"]

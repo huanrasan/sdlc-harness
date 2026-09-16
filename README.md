@@ -7,7 +7,7 @@ Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf, OpenCode...) the same guide
 gates, from specification to operation, with controls that scale from a solo developer to a regulated organization.
 Stack- and cloud-agnostic: public cloud, private cloud, on-prem or air-gapped.
 
-**Status:** v0.1.0, early preview.
+**Status:** v0.2.0, early preview.
 
 ## Why
 
@@ -20,7 +20,10 @@ standards so a team can switch or mix agents without rebuilding its process.
 - **`AGENTS.md` + 10 Agent Skills** covering orchestration, specify, design (ADR + threat model), plan, implement,
   verify, review, release, operate and maintain.
 - **Change records** (`docs/changes/<id>/`) with templates: evidence lives next to the code and survives context resets.
-- **Phase gates** via a single-file, zero-dependency CLI (`sdlc`), the same in git hooks and CI (GitHub Actions and GitLab).
+- **Phase gates** that check consistency (criteria traced to tests, threats to controls), run by a zero-dependency
+  CLI vendored into each repository, identical in git hooks and CI (GitHub Actions and GitLab).
+- **Human approvals bound to content**: SHA-256 receipts per artifact, roles and authority matrix, CODEOWNERS
+  generation, separation of duties, platform-verified in CI, and a hash-chained audit log.
 - **Profiles** `lite`, `standard` and `regulated` that require artifacts by change type and risk.
 - **Adapters** generated for agents that do not read `.agents/skills` natively.
 - **Controls matrix** mapped to NIST SSDF, SLSA, OWASP Agentic Top 10, DORA and AI governance frameworks.
@@ -28,11 +31,11 @@ standards so a team can switch or mix agents without rebuilding its process.
 ## Quick start
 
 ```bash
-git clone https://github.com/huanrasan/sdlc-harness.git
-python3 sdlc-harness/cli/sdlc.py init ../my-service --profile standard --ci github
+pipx install git+https://github.com/huanrasan/sdlc-harness.git
+sdlc init ../my-service --profile standard --ci github
 cd ../my-service
-python3 .harness/sdlc.py hooks && python3 .harness/sdlc.py doctor
-python3 .harness/sdlc.py new feature payment-retries --risk medium
+python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor
+python3 .harness/sdlc.pyz new feature payment-retries --risk medium
 ```
 
 Then ask your agent to work on the change; `AGENTS.md` routes it to the `sdlc-orchestrator` skill.

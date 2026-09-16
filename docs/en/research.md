@@ -100,10 +100,10 @@ Only the source list of `csalamando/harness-sdlc` was reviewed. None of its code
 
 ## 6. Suggested roadmap
 
-- v0.2: per-agent hook adapters calling the CLI; `CODEOWNERS` scaffolding in `init`.
-- v0.3: reference jobs for SBOM, signing and provenance (GitHub and GitLab); OpenSSF Scorecard integration.
-- v0.4: Tech Radar and architectural principles as artifacts; DORA metrics for the harness.
-- v0.5: optional extensions (memory and code-intelligence MCP, diagrams).
+- v0.2 (done): package + vendored zipapp; approval receipts verified by the platform; audit log; semantic gates; roster and CODEOWNERS.
+- v0.3: real CI sensors (SBOM, signing, provenance, SAST, IaC, test-first order); executable architecture rules and API contract diff.
+- v0.4: discovery/product, UX, data, FinOps, feedback and retirement phases; organization policies with expiring exceptions and memory; traceability and DORA reports.
+- v0.5: `sdlc upgrade`, releases and per-agent plugin packaging; cross-agent skill evals; brownfield adoption.
 
 ## 7. Sources
 

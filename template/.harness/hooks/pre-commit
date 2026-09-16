@@ -1,3 +1,0 @@
-#!/bin/sh
-# Fast local feedback. CI re-runs the same checks and is the authoritative gate.
-exec python3 .harness/sdlc.py check

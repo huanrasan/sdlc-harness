@@ -1,0 +1,43 @@
+# Roles, authority and ownership. Humans edit this file; changes to it require platform/security review.
+# Members are platform usernames ("alice") or platform teams/groups ("@my-org/security").
+
+[settings]
+platform = "github"            # github | gitlab
+separation_of_duties = true    # an approver cannot author the pull request or the approved artifact
+
+[roles.product-owner]
+members = []
+[roles.tech-lead]
+members = []
+[roles.architect]
+members = []
+[roles.security]
+members = []
+[roles.release-manager]
+members = []
+[roles.sre]
+members = []
+[roles.platform]
+members = []
+
+# Artifact -> roles allowed to approve it (any one of them). `adr` covers every file in docs/adr/.
+# Which artifacts actually need approval is decided by `approve = true` in the active profile.
+[authority]
+"spec.md" = ["product-owner", "tech-lead"]
+"design.md" = ["tech-lead", "architect"]
+"adr" = ["architect"]
+"threat-model.md" = ["security"]
+"plan.md" = ["tech-lead"]
+"verification.md" = ["tech-lead"]
+"review.md" = ["tech-lead"]
+"release.md" = ["release-manager"]
+"runbook.md" = ["sre"]
+
+# Extra CODEOWNERS entries (path pattern -> roles), emitted before the authority-derived ones.
+[codeowners]
+"*" = ["tech-lead"]
+"/harness.toml" = ["platform", "security"]
+"/.harness/" = ["platform", "security"]
+"/.agents/" = ["platform"]
+"/.github/workflows/" = ["platform", "security"]
+"/.gitlab-ci.sdlc.yml" = ["platform", "security"]

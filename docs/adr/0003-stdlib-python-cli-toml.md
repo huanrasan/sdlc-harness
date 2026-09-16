@@ -1,6 +1,8 @@
 # 0003. Stdlib-only Python CLI with TOML configuration
 
-**Status:** Accepted
+> Superseded by [0005](0005-package-with-vendored-zipapp.md): the single-file constraint no longer scales; stdlib-only and TOML remain.
+
+**Status:** Superseded by 0005
 **Date:** 2026-09-16
 **Deciders:** maintainers
 
