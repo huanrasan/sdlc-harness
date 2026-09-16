@@ -187,6 +187,140 @@ def check_runbook(text: str, rel: str, ctx: Context) -> Report:
     return report
 
 
+def _decision(text: str, rel: str, allowed: tuple[str, ...], report: Report) -> str | None:
+    m = re.search(r"^Decision:\s*`?([a-z-]+)`?\s*$", text, re.M | re.I)
+    if not m or m.group(1).lower() not in allowed:
+        report.error(f"{rel}: 'Decision:' must be one of {', '.join(allowed)}")
+        return None
+    return m.group(1).lower()
+
+
+def _rows(text: str, prefix: str, key: str) -> list[dict]:
+    return [r for r in table_with(text, prefix) if not _blank(cell(r, key))]
+
+
+def check_discovery(text: str, rel: str, ctx: Context) -> Report:
+    report = Report()
+    _require_sections(text, rel, ["Problem", "Target users"], report)
+    metrics = _rows(text, "baseline", "metric")
+    if not metrics:
+        report.error(f"{rel}: needs at least one success metric")
+    for r in metrics:
+        if _blank(cell(r, "target")) or _blank(cell(r, "measured")):
+            report.error(f"{rel}: metric '{cell(r, 'metric')}' needs a target and how it is measured")
+    if len(_rows(text, "effort", "option")) < 2:
+        report.error(f"{rel}: compare at least two options (including 'Do nothing')")
+    if _decision(text, rel, ("go", "no-go", "iterate"), report) == "no-go" and ctx.change["phase"] != "discover":
+        report.error(f"{rel}: decision is no-go; the change cannot progress past discovery")
+    return report
+
+
+def check_ux(text: str, rel: str, ctx: Context) -> Report:
+    report = Report()
+    _require_sections(text, rel, ["User flows", "Validation"], report)
+    screens = _rows(text, "empty", "screen")
+    if not screens:
+        report.error(f"{rel}: list at least one screen or component with its states")
+    for r in screens:
+        missing = [s for s in ("empty", "loading", "error", "success") if _blank(cell(r, s))]
+        if missing:
+            report.error(f"{rel}: '{cell(r, 'screen')}' does not define states {missing} (write 'n/a' if not applicable)")
+    if re.search(r"^- \[ \]", section(text, "Accessibility"), re.M):
+        report.error(f"{rel}: accessibility checklist has unchecked items")
+    return report
+
+
+def check_data(text: str, rel: str, ctx: Context) -> Report:
+    report = Report()
+    changes = _rows(text, "classification", "entity")
+    if not changes:
+        report.error(f"{rel}: list at least one data change")
+    for r in changes:
+        cls = cell(r, "classification").lower()
+        if not any(c in cls for c in ("public", "internal", "confidential", "restricted")):
+            report.error(f"{rel}: '{cell(r, 'entity')}' needs a classification")
+        if _blank(cell(r, "owner")):
+            report.error(f"{rel}: '{cell(r, 'entity')}' needs an owner")
+    _require_sections(text, rel, ["Migrations", "Rollback", "Retention and lineage"], report)
+    if "personal-data" in ctx.change.get("scopes", []):
+        answers = {cell(r, "question").lower(): cell(r, "answer") for r in table_with(text, "question")}
+        if not answers:
+            report.error(f"{rel}: personal-data scope requires the privacy impact table")
+        for question, answer in answers.items():
+            if _blank(answer):
+                report.error(f"{rel}: privacy question '{question}' is unanswered")
+    return report
+
+
+def check_cost(text: str, rel: str, ctx: Context) -> Report:
+    report = Report()
+    rows = _rows(text, "monthly", "component")
+    if not rows:
+        report.error(f"{rel}: estimate at least one component")
+    for r in rows:
+        if not re.search(r"\d", cell(r, "monthly")):
+            report.error(f"{rel}: '{cell(r, 'component')}' has no numeric monthly cost")
+    if not re.search(r"^Total monthly \(production\):\s*\S*\d", text, re.M):
+        report.error(f"{rel}: 'Total monthly (production):' needs a number")
+    _require_sections(text, rel, ["Assumptions"], report)
+    guardrails = section(text, "Guardrails")
+    if re.search(r":\s*$", guardrails, re.M) or "budget" not in guardrails.lower():
+        report.error(f"{rel}: guardrails need budget/alert thresholds, allocation tags and idle policy")
+    return report
+
+
+def check_ai_risk(text: str, rel: str, ctx: Context) -> Report:
+    report = Report()
+    _require_sections(text, rel, ["Use case", "Risk classification", "Human oversight", "Monitoring"], report)
+    risks = [r for r in table_with(text, "mitigation") if re.search(r"\bR-\d+\b", cell(r, "id"))]
+    if not risks:
+        report.error(f"{rel}: needs at least one risk with id R-n")
+    for r in risks:
+        if _blank(cell(r, "mitigation")) or _blank(cell(r, "verifiable")):
+            report.error(f"{rel}: {cell(r, 'id')} needs a mitigation and how it is verified")
+    evals = _rows(text, "threshold", "eval")
+    if not evals:
+        report.error(f"{rel}: define at least one evaluation with a threshold")
+    for r in evals:
+        if _blank(cell(r, "threshold")):
+            report.error(f"{rel}: eval '{cell(r, 'eval')}' has no threshold")
+        if ctx.change["phase"] in ("review", "release", "operate", "done") and _blank(cell(r, "result")):
+            report.error(f"{rel}: eval '{cell(r, 'eval')}' has no result before review")
+    return report
+
+
+def check_outcome(text: str, rel: str, ctx: Context) -> Report:
+    report = Report()
+    rows = _rows(text, "actual", "metric")
+    if not rows:
+        report.error(f"{rel}: report at least one success metric")
+    for r in rows:
+        if _blank(cell(r, "actual")):
+            report.error(f"{rel}: metric '{cell(r, 'metric')}' has no actual value")
+    discovery = ctx.read("discovery.md")
+    for r in _rows(discovery, "baseline", "metric"):
+        if cell(r, "metric") not in {cell(x, "metric") for x in rows}:
+            report.error(f"{rel}: success metric '{cell(r, 'metric')}' from discovery.md is not reported")
+    _decision(text, rel, ("keep", "iterate", "rollback", "retire"), report)
+    return report
+
+
+def check_retirement(text: str, rel: str, ctx: Context) -> Report:
+    report = Report()
+    _require_sections(text, rel, ["What is retired", "Data disposition", "Contracts and dependencies",
+                                  "Infrastructure teardown", "Rollback"], report)
+    consumers = _rows(text, "migration", "consumer")
+    if not consumers:
+        report.error(f"{rel}: list consumers (write 'none found' with how that was checked)")
+    for r in consumers:
+        if _blank(cell(r, "migration")) and "none" not in cell(r, "consumer").lower():
+            report.error(f"{rel}: consumer '{cell(r, 'consumer')}' has no migration path")
+    dates = {cell(r, "milestone").lower(): cell(r, "date") for r in table_with(text, "milestone")}
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", dates.get("sunset", "")):
+        report.error(f"{rel}: sunset date must be YYYY-MM-DD")
+    return report
+
+
 def check_adr(text: str, rel: str) -> Report:
     report = Report()
     options = re.findall(r"^\s*\d+\.\s+\S", section(text, "Options considered"), re.M)
@@ -205,4 +339,11 @@ CHECKERS = {
     "review.md": check_review,
     "release.md": check_release,
     "runbook.md": check_runbook,
+    "discovery.md": check_discovery,
+    "ux.md": check_ux,
+    "data.md": check_data,
+    "cost.md": check_cost,
+    "ai-risk.md": check_ai_risk,
+    "outcome.md": check_outcome,
+    "retirement.md": check_retirement,
 }

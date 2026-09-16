@@ -1,6 +1,6 @@
 # SDLC harness configuration. Docs: https://github.com/<owner>/sdlc-harness
 [harness]
-version = "0.3.0"
+version = "0.4.0"
 # lite | standard | regulated  (see .harness/profiles/)
 profile = "standard"
 agents_md_max_lines = 150
@@ -10,6 +10,11 @@ agents_md_max_lines = 150
 targets = ["claude-code", "codex", "copilot", "cursor", "gemini-cli"]
 # symlink (default) | copy (Windows without developer mode)
 mode = "symlink"
+
+[organization]
+# Mandatory organization policy, skills and memory: a git URL or local path. Vendored by `sdlc org pull`.
+source = ""
+ref = "main"
 
 [paths]
 skills = ".agents/skills"

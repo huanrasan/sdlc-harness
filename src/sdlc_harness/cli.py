@@ -7,9 +7,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-from . import (adapters, architecture, audit, authority, changes, contracts, evidence, installer, platform,
-               receipts, skills, tdd)
-from .core import PHASES, PROFILES, RISKS, TYPES, VERSION, Report, git, load_config, paths
+from . import (adapters, architecture, audit, authority, changes, contracts, evidence, installer, mcp, memory,
+               platform, policy, receipts, reports, skills, tdd)
+from .core import PHASES, PROFILES, RISKS, SCOPES, TYPES, VERSION, Report, git, load_config, paths
 
 CONVENTIONAL_RE = re.compile(
     r"^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._/-]+\))?!?: .+"
@@ -52,6 +52,8 @@ def run_check(root: Path, only_change: str | None = None, base: str | None = Non
         report.extend(adapters.check(root, cfg))
         report.extend(authority.check_roster(cfg, strict=False))
         report.extend(run_sensors(root, cfg, base))
+        report.extend(policy.check(root, cfg))
+        report.extend(memory.check(root))
     base_dir = root / p["changes"]
     if only_change:
         report.extend(changes.check_change(root, changes.change_dir(root, cfg, only_change), cfg))
@@ -158,6 +160,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("slug")
     p.add_argument("--risk", choices=RISKS, default="medium")
     p.add_argument("--no-ai", dest="ai_assisted", action="store_false")
+    p.add_argument("--scope", default="", help=f"comma-separated scopes: {','.join(SCOPES)}")
 
     p = sub.add_parser("phase", help="move a change to the next phase if its gate passes")
     p.add_argument("change")
@@ -192,6 +195,40 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--dir", help="evidence directory (default: [evidence] dir or sdlc-evidence)")
     p.add_argument("--require", help="comma-separated evidence kinds, overriding the profile (e.g. sbom)")
 
+    p = sub.add_parser("org", help="vendor the organization policy, skills and memory")
+    p.add_argument("action", choices=["pull"])
+    p.add_argument("--source", help="local directory or git URL (default: [organization] source)")
+    p.add_argument("--ref", help="git branch or tag (default: [organization] ref)")
+
+    p = sub.add_parser("memory", help="curated project/organization memory")
+    msub = p.add_subparsers(dest="memory_action", required=True)
+    m = msub.add_parser("add")
+    m.add_argument("--type", required=True, choices=memory.TYPES)
+    m.add_argument("--title", required=True)
+    m.add_argument("--tags", default="")
+    m.add_argument("--body", required=True)
+    m.add_argument("--source", default="")
+    m.add_argument("--review-days", type=int, default=180)
+    m = msub.add_parser("search")
+    m.add_argument("query")
+    m.add_argument("--type", choices=memory.TYPES)
+    m.add_argument("--tags", default="")
+    m.add_argument("--limit", type=int, default=5)
+    m.add_argument("--all", action="store_true", help="include superseded entries")
+    msub.add_parser("index")
+
+    p = sub.add_parser("report", help="traceability, delivery flow and DORA metrics")
+    p.add_argument("kind", choices=["trace", "flow", "dora"])
+    p.add_argument("--change", help="change id (trace)")
+    p.add_argument("--since", help="YYYY-MM-DD or Nd (flow, dora)")
+    p.add_argument("--tags", default="v*", help="release tag glob (dora)")
+    p.add_argument("--window-days", type=int, default=7, help="hotfix window for failed releases (dora)")
+    p.add_argument("--format", choices=["md", "json", "html"], default="md")
+    p.add_argument("--output", help="write to file instead of stdout")
+
+    p = sub.add_parser("mcp", help="serve harness tools over MCP (stdio)")
+    p.add_argument("--print-config", choices=sorted(mcp.CLIENT_CONFIG), help="print client configuration and exit")
+
     p = sub.add_parser("codeowners", help="generate CODEOWNERS from .harness/roster.toml")
     p.add_argument("--check", action="store_true", help="fail if CODEOWNERS is out of date")
 
@@ -215,7 +252,8 @@ def main(argv: list[str] | None = None) -> int:
         case "check":
             return run_check(root, args.change, args.base).print()
         case "new":
-            return changes.new(root, args.type, args.slug, args.risk, args.ai_assisted)
+            scopes = [x.strip() for x in args.scope.split(",") if x.strip()]
+            return changes.new(root, args.type, args.slug, args.risk, args.ai_assisted, scopes)
         case "phase":
             return changes.phase(root, args.change, args.phase)
         case "approve":
@@ -248,6 +286,45 @@ def main(argv: list[str] | None = None) -> int:
         case "evidence":
             require = [k for k in args.require.split(",") if k] if args.require is not None else None
             return evidence.check(root, load_config(root), args.dir, require).print()
+        case "org":
+            return policy.pull(root, load_config(root), args.source, args.ref)
+        case "memory":
+            load_config(root)
+            if args.memory_action == "add":
+                tags = [t.strip() for t in args.tags.split(",") if t.strip()]
+                path = memory.add(root, args.type, args.title, tags, args.body, args.source, args.review_days)
+                print(f"created {path.relative_to(root)}")
+                return 0
+            if args.memory_action == "index":
+                memory.write_index(root)
+                print(f"wrote {memory.MEMORY_DIR}/{memory.INDEX_FILE}")
+                return 0
+            tags = [t.strip() for t in args.tags.split(",") if t.strip()]
+            for e in memory.search(root, args.query, args.type, tags, args.limit, args.all):
+                print(f"[{e['origin']}] {e.get('id')} ({e.get('type')}) {e.get('title')} -> {e['path'].relative_to(root)}")
+            return 0
+        case "report":
+            cfg = load_config(root)
+            if args.kind == "trace":
+                if not args.change:
+                    raise SystemExit("report trace requires --change")
+                data = reports.trace(root, cfg, changes.change_dir(root, cfg, args.change))
+            elif args.kind == "flow":
+                data = reports.flow(root, cfg, reports.parse_since(args.since))
+            else:
+                data = reports.dora(root, reports.parse_since(args.since), args.tags, args.window_days)
+            text = reports.render(args.kind, data, args.format)
+            if args.output:
+                Path(args.output).write_text(text, encoding="utf-8")
+                print(f"wrote {args.output}")
+            else:
+                print(text)
+            return 0
+        case "mcp":
+            if args.print_config:
+                return mcp.print_config(args.print_config)
+            load_config(root)
+            return mcp.serve(root)
         case "codeowners":
             return cmd_codeowners(root, args.check)
         case "commit-msg":

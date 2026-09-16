@@ -28,6 +28,13 @@ the harness documents and `sdlc doctor` checks for, but cannot enforce by itself
 | C18 | Test integrity: tests precede behaviour changes and are not weakened | `sdlc tdd`: test-first ordering; skip/only markers and deleted tests; human waivers by trailer | CI (`check --base`) | PW.8 | OWASP Agentic ASI01/ASI10 (goal drift) |
 | C19 | Architecture conformance | `.harness/architecture.toml` layer rules citing ADRs | Gate + CI | PW.1, PW.2 | Architecture fitness functions |
 | C20 | API compatibility | OpenAPI/AsyncAPI breaking-change detection with SemVer policy | CI (`check --base`) | PW.1 | Semantic Versioning |
+| C21 | Product value validated before building and after release | `discovery.md` metrics and go decision; `outcome.md` results and decision | Gate | PO.1 | DORA user-centric focus |
+| C22 | Privacy and data protection by design | `data.md` classification, retention, privacy impact; approval for personal data | Gate + approvals | PO.1, PW.1 | GDPR-style DPIA; ISO/IEC 27701 |
+| C23 | AI system risk management | `ai-risk.md` risks, evaluations with thresholds, human oversight, monitoring | Gate + approvals | PW.1 (SP 800-218A) | NIST AI RMF Map/Measure/Manage; EU AI Act; OWASP LLM Top 10 |
+| C24 | Organization policy conformance with governed deviations | vendored `policy.toml` with hash lock; expiring deviations by authorized roles | Gate + CI | PO.1, PO.3 | ISO/IEC 42001 controls; internal audit |
+| C25 | Memory integrity and provenance | reviewed memory files; secret scanning; review dates; read-mostly MCP tools | Gate + PR review | PO.5 | OWASP Agentic ASI06 |
+| C26 | Measurement and continuous improvement | `report trace\|flow\|dora`; iteration review | CI (weekly) | PO.4 | DORA metrics |
+| C27 | Safe decommissioning | `retirement.md` consumers, sunset, data disposition, credential revocation | Gate | PS.3, RV.2 | - |
 
 ## Platform configuration checklist
 

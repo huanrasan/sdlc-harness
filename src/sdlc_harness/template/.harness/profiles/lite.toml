@@ -1,11 +1,12 @@
-# lite: individuals and small teams. Minimum evidence, no mandatory human-review artifact.
+# lite: individuals and small teams. Minimum evidence, no mandatory human-review artifacts.
 # A rule makes `artifact` mandatory once a change has moved PAST `phase`.
 # approve = true additionally requires a human receipt (`sdlc approve`) by a role from roster [authority].
+# scopes = [...] applies the rule only to changes declaring one of those scopes (change.toml `scopes`).
 
 [[rules]]
 artifact = "spec.md"
 phase = "spec"
-types = ["feature", "architecture"]
+types = ["feature", "architecture", "retirement"]
 min_risk = "low"
 
 [[rules]]
@@ -33,9 +34,29 @@ types = ["architecture"]
 min_risk = "low"
 
 [[rules]]
+artifact = "data.md"
+phase = "design"
+types = ["fix", "feature", "architecture", "retirement"]
+min_risk = "low"
+scopes = ["personal-data"]
+
+[[rules]]
+artifact = "ai-risk.md"
+phase = "design"
+types = ["fix", "feature", "architecture", "retirement"]
+min_risk = "low"
+scopes = ["ai"]
+
+[[rules]]
+artifact = "retirement.md"
+phase = "design"
+types = ["retirement"]
+min_risk = "low"
+
+[[rules]]
 artifact = "verification.md"
 phase = "verify"
-types = ["fix", "feature", "architecture"]
+types = ["fix", "feature", "architecture", "retirement"]
 min_risk = "medium"
 
 [sensors]

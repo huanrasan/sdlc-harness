@@ -2,18 +2,26 @@
 # Pair with branch protection, CODEOWNERS approval and signed commits on the VCS platform.
 # A rule makes `artifact` mandatory once a change has moved PAST `phase`.
 # approve = true additionally requires a human receipt (`sdlc approve`) by a role from roster [authority].
+# scopes = [...] applies the rule only to changes declaring one of those scopes (change.toml `scopes`).
+
+[[rules]]
+artifact = "discovery.md"
+phase = "discover"
+types = ["feature", "architecture"]
+min_risk = "low"
+approve = true
 
 [[rules]]
 artifact = "spec.md"
 phase = "spec"
-types = ["fix", "feature", "architecture"]
+types = ["fix", "feature", "architecture", "retirement"]
 min_risk = "low"
 approve = true
 
 [[rules]]
 artifact = "design.md"
 phase = "design"
-types = ["feature", "architecture"]
+types = ["feature", "architecture", "retirement"]
 min_risk = "low"
 approve = true
 
@@ -39,30 +47,69 @@ min_risk = "low"
 approve = true
 
 [[rules]]
+artifact = "ux.md"
+phase = "design"
+types = ["feature", "architecture"]
+min_risk = "low"
+scopes = ["ui"]
+approve = true
+
+[[rules]]
+artifact = "data.md"
+phase = "design"
+types = ["fix", "feature", "architecture", "retirement"]
+min_risk = "low"
+scopes = ["data", "personal-data"]
+approve = true
+
+[[rules]]
+artifact = "cost.md"
+phase = "design"
+types = ["feature", "architecture"]
+min_risk = "low"
+scopes = ["infra"]
+approve = true
+
+[[rules]]
+artifact = "ai-risk.md"
+phase = "design"
+types = ["fix", "feature", "architecture", "retirement"]
+min_risk = "low"
+scopes = ["ai"]
+approve = true
+
+[[rules]]
+artifact = "retirement.md"
+phase = "design"
+types = ["retirement"]
+min_risk = "low"
+approve = true
+
+[[rules]]
 artifact = "plan.md"
 phase = "plan"
-types = ["fix", "feature", "architecture"]
+types = ["fix", "feature", "architecture", "retirement"]
 min_risk = "low"
 approve = true
 
 [[rules]]
 artifact = "verification.md"
 phase = "verify"
-types = ["fix", "feature", "architecture"]
+types = ["fix", "feature", "architecture", "retirement"]
 min_risk = "low"
 approve = true
 
 [[rules]]
 artifact = "review.md"
 phase = "review"
-types = ["fix", "feature", "architecture"]
+types = ["fix", "feature", "architecture", "retirement"]
 min_risk = "low"
 approve = true
 
 [[rules]]
 artifact = "release.md"
 phase = "release"
-types = ["fix", "feature", "architecture"]
+types = ["fix", "feature", "architecture", "retirement"]
 min_risk = "low"
 approve = true
 
@@ -72,6 +119,12 @@ phase = "release"
 types = ["feature", "architecture"]
 min_risk = "medium"
 approve = true
+
+[[rules]]
+artifact = "outcome.md"
+phase = "operate"
+types = ["feature"]
+min_risk = "low"
 
 [sensors]
 # error | warn | off. test_first, weakened_tests and contracts run when a base ref is given (CI: check --base).

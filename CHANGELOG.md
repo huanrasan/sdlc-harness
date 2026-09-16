@@ -5,6 +5,24 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-16
+
+### Added
+- `discover` phase, `retirement` change type and change scopes (`ui`, `api`, `data`, `personal-data`, `infra`, `ai`)
+  with conditional artifacts and semantic gates: `discovery.md`, `ux.md`, `data.md`, `cost.md`, `ai-risk.md`,
+  `outcome.md`, `retirement.md`; iteration review template.
+- Eight skills: `sdlc-discover`, `sdlc-ux`, `sdlc-data`, `sdlc-finops`, `sdlc-ai-risk`, `sdlc-outcome`, `sdlc-retire`,
+  `sdlc-iteration-review`.
+- `sdlc org pull` and organization policy enforcement (`[require]`/`[recommend]`, hash lock, `org-` skills and memory)
+  with expiring, role-authorized deviations.
+- `sdlc memory add|search|index` with secret scanning, review dates and generated index.
+- `sdlc mcp`: stdio MCP server with read-mostly tools; `--print-config` for common clients.
+- `sdlc report trace|flow|dora` in Markdown, JSON and HTML; weekly report workflow; audit log records blocked transitions.
+- Roster roles ux-lead, data-steward, finops; ADRs 0009-0011; controls C21-C27.
+
+### Changed
+- `sdlc new` starts at the first phase required by the profile and accepts `--scope`.
+
 ## [0.3.0] - 2026-09-16
 
 ### Added

@@ -13,3 +13,6 @@ summaries in Spanish are in [docs/es/investigacion.md](../es/investigacion.md).
 | [0006](0006-approval-receipts-verified-by-platform.md) | Approval receipts bound to content and verified by the VCS platform | Accepted |
 | [0007](0007-sensor-evidence-via-sarif-and-cyclonedx.md) | Sensor evidence via SARIF and CycloneDX, policy in the harness | Accepted |
 | [0008](0008-executable-architecture-and-contract-compatibility.md) | Executable architecture rules and API contract compatibility | Accepted |
+| [0009](0009-lifecycle-coverage-with-scopes.md) | Full lifecycle coverage with conditional scopes | Accepted |
+| [0010](0010-organization-policy-and-memory.md) | Vendored organization policy with deviations, and reviewed memory | Accepted |
+| [0011](0011-visibility-from-repository-data.md) | Visibility reports computed from repository data | Accepted |

@@ -7,7 +7,7 @@ Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf, OpenCode...) the same guide
 gates, from specification to operation, with controls that scale from a solo developer to a regulated organization.
 Stack- and cloud-agnostic: public cloud, private cloud, on-prem or air-gapped.
 
-**Status:** v0.3.0, early preview.
+**Status:** v0.4.0, early preview.
 
 ## Why
 
@@ -17,8 +17,9 @@ standards so a team can switch or mix agents without rebuilding its process.
 
 ## What you get
 
-- **`AGENTS.md` + 10 Agent Skills** covering orchestration, specify, design (ADR + threat model), plan, implement,
-  verify, review, release, operate and maintain.
+- **`AGENTS.md` + 18 Agent Skills** covering the whole lifecycle: discovery, specification, design (ADR, threat model,
+  UX, data and privacy, FinOps, AI risk), plan, implement, verify, review, release, operate, outcome, retirement,
+  iteration review and maintenance.
 - **Change records** (`docs/changes/<id>/`) with templates: evidence lives next to the code and survives context resets.
 - **Phase gates** that check consistency (criteria traced to tests, threats to controls), run by a zero-dependency
   CLI vendored into each repository, identical in git hooks and CI (GitHub Actions and GitLab).
@@ -27,6 +28,9 @@ standards so a team can switch or mix agents without rebuilding its process.
 - **Deterministic sensors**: test-first ordering and weakened-test detection from git history, executable layer
   rules citing ADRs, OpenAPI/AsyncAPI breaking-change detection, and a single policy over any SARIF scanner and
   CycloneDX SBOM (severity threshold, license deny list, expiring exceptions).
+- **Organization policy and memory**: vendored mandatory policy with expiring deviations, reviewed memory entries,
+  and an MCP server with read-mostly tools for any agent.
+- **Visibility**: traceability, delivery flow and DORA-style reports as Markdown, JSON or HTML.
 - **Signed releases**: SBOM, SLSA provenance and SBOM attestations, keyless Sigstore signatures (GitHub and GitLab).
 - **Profiles** `lite`, `standard` and `regulated` that require artifacts by change type and risk.
 - **Adapters** generated for agents that do not read `.agents/skills` natively.

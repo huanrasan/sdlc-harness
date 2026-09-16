@@ -94,6 +94,76 @@ exactamente ese contenido y el recibo, que pertenece al rol (directamente o medi
 "Remove all approvals when commits are added". La verificación de equipos necesita un token con lectura de la
 organización (secreto `SDLC_APPROVALS_TOKEN` en GitHub, `GITLAB_TOKEN` en GitLab).
 
+## Cobertura del ciclo de vida
+
+Fases: `discover -> spec -> design -> plan -> implement -> verify -> review -> release -> operate -> done`.
+Tipos: `fix`, `feature`, `architecture`, `retirement`. `sdlc new` empieza en la primera fase que exige el perfil, así que
+los fixes empiezan en `spec`. Los scopes (`--scope ui,api,data,personal-data,infra,ai`) agregan artefactos condicionales:
+
+| Artefacto | Cuándo (perfil standard) | Skill | Verificaciones semánticas |
+|---|---|---|---|
+| `discovery.md` | feature/architecture desde riesgo medium, aprobado por product owner | `sdlc-discover` | métricas con meta y fuente, dos opciones, `Decision: go/no-go/iterate` |
+| `ux.md` | scope `ui` | `sdlc-ux` | estados vacío/carga/error/éxito, checklist WCAG 2.2 AA completo |
+| `data.md` | scope `data`; con aprobación si `personal-data` | `sdlc-data` | clasificación y dueño, migraciones, rollback, retención; preguntas de privacidad respondidas |
+| `cost.md` | scope `infra` desde riesgo medium | `sdlc-finops` | costos numéricos por componente y total, supuestos, presupuesto/etiquetas/política de inactividad |
+| `ai-risk.md` | scope `ai`, aprobado por security o architect | `sdlc-ai-risk` | riesgos R-n con mitigación verificable, evals con umbral y resultado antes de la revisión |
+| `retirement.md` | tipo `retirement` | `sdlc-retire` | consumidores con ruta de migración, fecha de sunset ISO, disposición de datos, desmontaje, rollback |
+| `outcome.md` | feature desde riesgo medium, en `operate` | `sdlc-outcome` | cada métrica de discovery con valor real, `Decision: keep/iterate/rollback/retire` |
+
+Las revisiones de iteración (`sdlc-iteration-review`) usan los reportes de abajo y `docs/sdlc/templates/iteration-review.md`.
+
+## Política de organización
+
+Mantén un repositorio de políticas con `policy.toml` y, opcionalmente, `skills/org-*` y `memory/`. En cada proyecto
+define `[organization] source` y ejecuta `sdlc org pull` (prográmalo): los archivos se copian a `.harness/org/` y
+`.agents/skills/org-*` con un lock de hashes, de modo que la CI funciona sin red y cualquier edición local hace fallar la
+compuerta.
+
+```toml
+[policy]
+id = "acme-baseline"
+version = "1.2.0"
+
+[require]            # obligatorio; los proyectos pueden ser más estrictos, nunca más laxos
+min_profile = "standard"
+sensors = { weakened_tests = "error", contracts = "error" }
+require_evidence = ["secrets", "sca", "sbom"]
+license_deny = ["AGPL-3.0-only", "SSPL-1.0"]
+fail_on_max = "high"
+approvals = ["spec.md", "release.md"]
+separation_of_duties = true
+require_ci = true
+roles_with_members = ["security"]
+agents_md_lines = ["Never run `sdlc approve`"]
+
+[recommend]          # mismas claves, solo advertencias
+```
+
+Una excepción justificada va en `.harness/deviations.toml` con `policy` (la clave que imprime `check`), `reason`,
+`approver`, `role` (permitido por `[authority] deviation` del roster) y `expires`. Las desviaciones vencidas fallan y las
+que ya no se usan generan advertencia.
+
+## Memoria y MCP
+
+`sdlc memory add --type decision|lesson|convention|pitfall|glossary --title ... --tags ... --body ...` crea una entrada
+Markdown revisable en `docs/memory/` y actualiza `INDEX.md`; `sdlc memory search "<tema>"` busca en la memoria del
+proyecto y de la organización (primero la de la organización). `check` rechaza secretos, índices desactualizados y
+referencias `superseded_by` rotas, y advierte sobre entradas con `review_by` vencido.
+
+`python3 .harness/sdlc.pyz mcp` expone herramientas por MCP stdio para cualquier cliente: `memory_search`, `memory_add`,
+`change_status`, `check`, `trace`. Por diseño no hay herramientas de aprobación ni de políticas. Para imprimir la
+configuración de un cliente: `python3 .harness/sdlc.pyz mcp --print-config claude-code|cursor|vscode|gemini-cli|codex`.
+
+## Reportes
+
+| Comando | Contenido |
+|---|---|
+| `sdlc report trace --change <id>` | criterios de aceptación -> tests planificados -> verificación; amenazas -> controles; ADRs; aprobaciones (válidas/vencidas); commits; brechas |
+| `sdlc report flow --since 90d` | por cambio: lead time, horas por fase, bloqueos de compuerta y tiempo bloqueado; aprobaciones por rol; proporción asistida por IA |
+| `sdlc report dora --since 90d` | frecuencia de despliegue, lead time, tasa de fallos, tiempo de recuperación, tasa de retrabajo (proxies basados en tags de release) |
+
+Formatos: `--format md|json|html` y `--output <archivo>`. `.github/workflows/sdlc-report.yml` publica artefactos HTML/JSON semanales.
+
 ## Sensores
 
 `check --base <ref>` (lo que ejecuta la CI en los pull requests) agrega sensores de historia y de estructura. Cada uno

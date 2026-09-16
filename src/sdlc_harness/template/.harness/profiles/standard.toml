@@ -1,11 +1,19 @@
 # standard: product teams. Evidence proportional to risk; independent review from medium risk.
 # A rule makes `artifact` mandatory once a change has moved PAST `phase`.
 # approve = true additionally requires a human receipt (`sdlc approve`) by a role from roster [authority].
+# scopes = [...] applies the rule only to changes declaring one of those scopes (change.toml `scopes`).
+
+[[rules]]
+artifact = "discovery.md"
+phase = "discover"
+types = ["feature", "architecture"]
+min_risk = "medium"
+approve = true
 
 [[rules]]
 artifact = "spec.md"
 phase = "spec"
-types = ["fix", "feature", "architecture"]
+types = ["fix", "feature", "architecture", "retirement"]
 min_risk = "low"
 approve = true
 
@@ -19,7 +27,7 @@ approve = true
 [[rules]]
 artifact = "design.md"
 phase = "design"
-types = ["architecture"]
+types = ["architecture", "retirement"]
 min_risk = "low"
 approve = true
 
@@ -45,6 +53,50 @@ min_risk = "medium"
 approve = true
 
 [[rules]]
+artifact = "ux.md"
+phase = "design"
+types = ["feature", "architecture"]
+min_risk = "low"
+scopes = ["ui"]
+
+[[rules]]
+artifact = "data.md"
+phase = "design"
+types = ["fix", "feature", "architecture", "retirement"]
+min_risk = "low"
+scopes = ["data"]
+
+[[rules]]
+artifact = "data.md"
+phase = "design"
+types = ["fix", "feature", "architecture", "retirement"]
+min_risk = "low"
+scopes = ["personal-data"]
+approve = true
+
+[[rules]]
+artifact = "cost.md"
+phase = "design"
+types = ["feature", "architecture"]
+min_risk = "medium"
+scopes = ["infra"]
+
+[[rules]]
+artifact = "ai-risk.md"
+phase = "design"
+types = ["fix", "feature", "architecture", "retirement"]
+min_risk = "low"
+scopes = ["ai"]
+approve = true
+
+[[rules]]
+artifact = "retirement.md"
+phase = "design"
+types = ["retirement"]
+min_risk = "low"
+approve = true
+
+[[rules]]
 artifact = "plan.md"
 phase = "plan"
 types = ["feature"]
@@ -53,25 +105,25 @@ min_risk = "medium"
 [[rules]]
 artifact = "plan.md"
 phase = "plan"
-types = ["architecture"]
+types = ["architecture", "retirement"]
 min_risk = "low"
 
 [[rules]]
 artifact = "verification.md"
 phase = "verify"
-types = ["fix", "feature", "architecture"]
+types = ["fix", "feature", "architecture", "retirement"]
 min_risk = "low"
 
 [[rules]]
 artifact = "review.md"
 phase = "review"
-types = ["fix", "feature", "architecture"]
+types = ["fix", "feature", "architecture", "retirement"]
 min_risk = "medium"
 
 [[rules]]
 artifact = "release.md"
 phase = "release"
-types = ["feature", "architecture"]
+types = ["feature", "architecture", "retirement"]
 min_risk = "medium"
 approve = true
 
@@ -85,6 +137,12 @@ min_risk = "high"
 artifact = "runbook.md"
 phase = "release"
 types = ["architecture"]
+min_risk = "medium"
+
+[[rules]]
+artifact = "outcome.md"
+phase = "operate"
+types = ["feature"]
 min_risk = "medium"
 
 [sensors]

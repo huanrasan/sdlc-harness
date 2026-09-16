@@ -1,0 +1,9 @@
+# Time-boxed deviations from mandatory organization policy (.harness/org/policy.toml [require]).
+# Owned by architecture and security (CODEOWNERS). Expired deviations fail the gate.
+#
+# [[deviation]]
+# policy = "sensors.test_first"        # key reported by `sdlc check`
+# reason = "Legacy module without test harness; ISSUE-42 adds it this quarter"
+# approver = "ana"
+# role = "architect"                   # must be listed in roster [authority] deviation
+# expires = 2026-12-31

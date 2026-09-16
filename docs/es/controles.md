@@ -28,6 +28,13 @@ sistema VCS/CI: el arnés la documenta y `sdlc doctor` la verifica, pero no pued
 | C18 | Integridad de los tests: preceden a los cambios de comportamiento y no se debilitan | `sdlc tdd`: orden test-first; marcadores skip/only y tests borrados; excepciones humanas por trailer | CI (`check --base`) | PW.8 | OWASP Agentic ASI01/ASI10 |
 | C19 | Conformidad con la arquitectura | Reglas de capas en `.harness/architecture.toml` con referencia a ADRs | Compuerta + CI | PW.1, PW.2 | Fitness functions de arquitectura |
 | C20 | Compatibilidad de APIs | Detección de cambios incompatibles en OpenAPI/AsyncAPI con política SemVer | CI (`check --base`) | PW.1 | Semantic Versioning |
+| C21 | Valor de producto validado antes de construir y después del release | Métricas y decisión go en `discovery.md`; resultados y decisión en `outcome.md` | Compuerta | PO.1 | Foco en el usuario (DORA) |
+| C22 | Privacidad y protección de datos desde el diseño | Clasificación, retención e impacto de privacidad en `data.md`; aprobación para datos personales | Compuerta + aprobaciones | PO.1, PW.1 | DPIA estilo GDPR; ISO/IEC 27701 |
+| C23 | Gestión de riesgos de sistemas de IA | Riesgos, evals con umbral, supervisión humana y monitoreo en `ai-risk.md` | Compuerta + aprobaciones | PW.1 (SP 800-218A) | NIST AI RMF Map/Measure/Manage; EU AI Act; OWASP LLM Top 10 |
+| C24 | Conformidad con la política de la organización y desviaciones gobernadas | `policy.toml` vendorizado con lock de hashes; desviaciones con vencimiento por roles autorizados | Compuerta + CI | PO.1, PO.3 | Controles ISO/IEC 42001; auditoría interna |
+| C25 | Integridad y procedencia de la memoria | Memoria revisada en PR; detección de secretos; fechas de revisión; herramientas MCP de solo lectura salvo `memory_add` | Compuerta + revisión de PR | PO.5 | OWASP Agentic ASI06 |
+| C26 | Medición y mejora continua | `report trace\|flow\|dora`; revisión de iteración | CI (semanal) | PO.4 | Métricas DORA |
+| C27 | Retiro seguro | Consumidores, sunset, disposición de datos y revocación de credenciales en `retirement.md` | Compuerta | PS.3, RV.2 | - |
 
 ## Checklist de configuración de plataforma
 

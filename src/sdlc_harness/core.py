@@ -11,9 +11,11 @@ from pathlib import Path
 from . import __version__
 
 VERSION = __version__
-PHASES = ["spec", "design", "plan", "implement", "verify", "review", "release", "operate", "done"]
+PHASES = ["discover", "spec", "design", "plan", "implement", "verify", "review", "release", "operate", "done"]
 RISKS = ["low", "medium", "high"]
-TYPES = ["fix", "feature", "architecture"]
+TYPES = ["fix", "feature", "architecture", "retirement"]
+# Scopes make artifacts conditional: a rule with `scopes` applies only when the change declares one of them.
+SCOPES = ["ui", "api", "data", "personal-data", "infra", "ai"]
 PROFILES = ["lite", "standard", "regulated"]
 PLACEHOLDER = "<!-- sdlc:fill -->"
 VENDORED_CLI = ".harness/sdlc.pyz"

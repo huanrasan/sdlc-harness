@@ -7,7 +7,7 @@ import tempfile
 import zipapp
 from pathlib import Path
 
-from . import adapters, skills
+from . import adapters, memory, skills
 from .core import VENDORED_CLI, load_config, paths
 
 PACKAGE_DIR = Path(__file__).resolve().parent
@@ -78,5 +78,7 @@ def sync(root: Path) -> int:
         return report.print()
     if skills.write_index(root, found):
         print("updated AGENTS.md skills index")
+    if (root / memory.MEMORY_DIR).is_dir():
+        memory.write_index(root)
     adapters.sync(root, cfg)
     return 0

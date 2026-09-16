@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 import re
 import shutil
 import tomllib
 from pathlib import Path
 
 from . import audit, gates, receipts
-from .core import PHASES, PLACEHOLDER, RISKS, TYPES, HarnessError, Report, load_config, load_toml, paths
+from .core import PHASES, PLACEHOLDER, RISKS, SCOPES, TYPES, HarnessError, Report, load_config, load_toml, paths
 
 SLUG_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
@@ -22,6 +23,8 @@ def required_rules(change: dict, rules: list[dict], upto_phase: str | None = Non
         if change["type"] not in rule.get("types", TYPES):
             continue
         if risk_idx < RISKS.index(rule.get("min_risk", "low")):
+            continue
+        if "scopes" in rule and not set(rule["scopes"]) & set(change.get("scopes", [])):
             continue
         if upto_phase is None and phase_idx <= PHASES.index(rule["phase"]):
             continue
@@ -44,6 +47,9 @@ def load_change(change_dir: Path, report: Report) -> dict | None:
         if change.get(key) not in allowed:
             report.error(f"{change_dir.name}/change.toml: '{key}' must be one of {allowed}")
             ok = False
+    if unknown := set(change.get("scopes", [])) - set(SCOPES):
+        report.error(f"{change_dir.name}/change.toml: unknown scopes {sorted(unknown)} (allowed: {SCOPES})")
+        ok = False
     if not isinstance(change.get("ai_assisted"), bool):
         report.error(f"{change_dir.name}/change.toml: 'ai_assisted' must be true or false (AI disclosure control)")
         ok = False
@@ -105,7 +111,14 @@ def change_dir(root: Path, cfg: dict, change_id: str) -> Path:
     return d
 
 
-def new(root: Path, change_type: str, slug: str, risk: str, ai_assisted: bool) -> int:
+def start_phase(change: dict, rules: list[dict]) -> str:
+    """First phase with a required artifact, so small changes skip discovery ceremony."""
+    phases = [r["phase"] for r in required_rules(change, rules, upto_phase="done")]
+    first = min(phases, key=PHASES.index) if phases else "spec"
+    return first if PHASES.index(first) < PHASES.index("spec") else "spec"
+
+
+def new(root: Path, change_type: str, slug: str, risk: str, ai_assisted: bool, scopes: list[str] | None = None) -> int:
     if not SLUG_RE.match(slug):
         raise HarnessError("slug must be kebab-case")
     cfg = load_config(root)
@@ -114,20 +127,26 @@ def new(root: Path, change_type: str, slug: str, risk: str, ai_assisted: bool) -
     d = root / p["changes"] / change_id
     if d.exists():
         raise HarnessError(f"change already exists: {d.relative_to(root)}")
+    scopes = scopes or []
+    if unknown := set(scopes) - set(SCOPES):
+        raise HarnessError(f"unknown scopes {sorted(unknown)} (allowed: {SCOPES})")
+    rules = cfg["_profile"].get("rules", [])
+    change = {"type": change_type, "risk": risk, "scopes": scopes}
+    change["phase"] = start_phase(change, rules)
     d.mkdir(parents=True)
     (d / "change.toml").write_text(
-        f'id = "{change_id}"\ntype = "{change_type}"\nrisk = "{risk}"\nphase = "spec"\n'
+        f'id = "{change_id}"\ntype = "{change_type}"\nrisk = "{risk}"\nphase = "{change["phase"]}"\n'
+        f"scopes = {json.dumps(scopes)}\n"
         f"ai_assisted = {'true' if ai_assisted else 'false'}\nadrs = []\n",
         encoding="utf-8",
     )
     created = []
-    change = {"type": change_type, "risk": risk, "phase": "spec"}
-    for rule in required_rules(change, cfg["_profile"].get("rules", []), upto_phase="done"):
+    for rule in required_rules(change, rules, upto_phase="done"):
         tpl = root / p["templates"] / rule["artifact"]
         if rule["artifact"] != "adr" and tpl.exists() and not (d / rule["artifact"]).exists():
             shutil.copy2(tpl, d / rule["artifact"])
             created.append(rule["artifact"])
-    audit.append(root, d, "created", type=change_type, risk=risk, ai_assisted=ai_assisted)
+    audit.append(root, d, "created", type=change_type, risk=risk, scopes=scopes, ai_assisted=ai_assisted)
     print(f"created {d.relative_to(root)}: change.toml {' '.join(created)}")
     return 0
 
@@ -144,6 +163,7 @@ def phase(root: Path, change_id: str, target: str) -> int:
     report = check_change(root, d, cfg)
     if report.errors:
         meta.write_text(text, encoding="utf-8")
+        audit.append(root, d, "phase_blocked", **{"from": current, "to": target, "errors": len(report.errors)})
         print(f"gate blocked: {change_id} stays in '{current}'")
     else:
         audit.append(root, d, "phase", **{"from": current, "to": target})

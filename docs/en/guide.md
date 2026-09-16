@@ -89,6 +89,74 @@ did not author the pull request or the artifact. Every change also keeps a hash-
 edits to existing events. GitLab projects must enable "Remove all approvals when commits are added"; team checks need
 a token with organization read access (`SDLC_APPROVALS_TOKEN` secret on GitHub, `GITLAB_TOKEN` on GitLab).
 
+## Lifecycle coverage
+
+Phases: `discover -> spec -> design -> plan -> implement -> verify -> review -> release -> operate -> done`.
+Types: `fix`, `feature`, `architecture`, `retirement`. `sdlc new` starts at the first phase the profile requires, so
+fixes start at `spec`. Scopes (`--scope ui,api,data,personal-data,infra,ai`) add conditional artifacts:
+
+| Artifact | When (standard profile) | Skill | Semantic checks |
+|---|---|---|---|
+| `discovery.md` | feature/architecture from medium risk, approved by product owner | `sdlc-discover` | metrics with target and source, two options, `Decision: go/no-go/iterate` |
+| `ux.md` | scope `ui` | `sdlc-ux` | empty/loading/error/success states, WCAG 2.2 AA checklist complete |
+| `data.md` | scope `data`; approved when `personal-data` | `sdlc-data` | classification and owner, migrations, rollback, retention; privacy questions answered |
+| `cost.md` | scope `infra` from medium risk | `sdlc-finops` | numeric component costs and total, assumptions, budget/tags/idle guardrails |
+| `ai-risk.md` | scope `ai`, approved by security or architect | `sdlc-ai-risk` | risks R-n with verifiable mitigations, evals with thresholds and results before review |
+| `retirement.md` | type `retirement` | `sdlc-retire` | consumers with migration paths, ISO sunset date, data disposition, teardown, rollback |
+| `outcome.md` | feature from medium risk, in `operate` | `sdlc-outcome` | every discovery metric reported with actual value, `Decision: keep/iterate/rollback/retire` |
+
+Iteration reviews (`sdlc-iteration-review`) use the reports below and `docs/sdlc/templates/iteration-review.md`.
+
+## Organization policy
+
+Keep a policy repository with `policy.toml`, optional `skills/org-*` and `memory/`. In each project set
+`[organization] source` and run `sdlc org pull` (schedule it): files are vendored into `.harness/org/` and
+`.agents/skills/org-*` with a hash lock, so CI stays offline and local edits fail the gate.
+
+```toml
+[policy]
+id = "acme-baseline"
+version = "1.2.0"
+
+[require]            # enforced; projects may be stricter, never looser
+min_profile = "standard"
+sensors = { weakened_tests = "error", contracts = "error" }
+require_evidence = ["secrets", "sca", "sbom"]
+license_deny = ["AGPL-3.0-only", "SSPL-1.0"]
+fail_on_max = "high"
+approvals = ["spec.md", "release.md"]
+separation_of_duties = true
+require_ci = true
+roles_with_members = ["security"]
+agents_md_lines = ["Never run `sdlc approve`"]
+
+[recommend]          # same keys, warnings only
+```
+
+A justified exception goes in `.harness/deviations.toml` with `policy` (the key printed by `check`), `reason`,
+`approver`, `role` (allowed by roster `[authority] deviation`) and `expires`. Expired deviations fail; unused ones warn.
+
+## Memory and MCP
+
+`sdlc memory add --type decision|lesson|convention|pitfall|glossary --title ... --tags ... --body ...` writes a reviewed
+Markdown entry in `docs/memory/` and updates `INDEX.md`; `sdlc memory search "<topic>"` searches project and organization
+memory (organization first). `check` rejects secrets, stale indexes and broken `superseded_by` links, and warns on
+entries past `review_by`.
+
+`python3 .harness/sdlc.pyz mcp` serves tools over MCP stdio for any client: `memory_search`, `memory_add`,
+`change_status`, `check`, `trace`. There are no approval or policy tools by design. Print a client configuration with
+`python3 .harness/sdlc.pyz mcp --print-config claude-code|cursor|vscode|gemini-cli|codex`.
+
+## Reports
+
+| Command | Content |
+|---|---|
+| `sdlc report trace --change <id>` | acceptance criteria -> planned tests -> verification; threats -> controls; ADRs; approvals (valid/stale); commits; gaps |
+| `sdlc report flow --since 90d` | per change: lead time, hours per phase, gate blocks and blocked time; approvals by role; AI-assisted share |
+| `sdlc report dora --since 90d` | deployment frequency, lead time, change failure rate, failed deployment recovery time, rework rate (release-tag proxies) |
+
+Formats: `--format md|json|html` and `--output <file>`. `.github/workflows/sdlc-report.yml` publishes weekly HTML/JSON artifacts.
+
 ## Sensors
 
 `check --base <ref>` (what CI runs on pull requests) adds history and structure sensors. Each has a level per profile

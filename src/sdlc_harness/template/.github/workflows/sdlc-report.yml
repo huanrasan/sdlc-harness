@@ -1,0 +1,33 @@
+name: sdlc-report
+
+# Weekly visibility: delivery flow and DORA-style metrics as a downloadable HTML page and JSON (for dashboards).
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generate reports
+        run: |
+          mkdir -p sdlc-report
+          python3 .harness/sdlc.pyz report flow --since 90d --format html --output sdlc-report/flow.html
+          python3 .harness/sdlc.pyz report flow --since 90d --format json --output sdlc-report/flow.json
+          python3 .harness/sdlc.pyz report dora --since 90d --format html --output sdlc-report/dora.html
+          python3 .harness/sdlc.pyz report dora --since 90d --format json --output sdlc-report/dora.json
+          python3 .harness/sdlc.pyz check > sdlc-report/check.txt || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdlc-report
+          path: sdlc-report/

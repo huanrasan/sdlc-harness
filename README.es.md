@@ -8,7 +8,7 @@ las mismas compuertas deterministas, desde la especificación hasta la operació
 desarrollador individual hasta una organización regulada. No depende del stack ni de la nube: funciona en nube
 pública, nube privada, on-prem o entornos air-gapped.
 
-**Estado:** v0.3.0, versión preliminar.
+**Estado:** v0.4.0, versión preliminar.
 
 ## Por qué
 
@@ -18,8 +18,9 @@ estándares abiertos para que un equipo pueda cambiar o combinar agentes sin reh
 
 ## Qué incluye
 
-- **`AGENTS.md` + 10 Agent Skills**: orquestación, especificación, diseño (ADR + modelo de amenazas), planificación,
-  implementación, verificación, revisión, release, operación y mantenimiento.
+- **`AGENTS.md` + 18 Agent Skills** que cubren todo el ciclo: descubrimiento, especificación, diseño (ADR, modelo de
+  amenazas, UX, datos y privacidad, FinOps, riesgo de IA), planificación, implementación, verificación, revisión,
+  release, operación, resultados, retiro, revisión de iteración y mantenimiento.
 - **Change records** (`docs/changes/<id>/`) con plantillas: la evidencia vive junto al código y sobrevive a los
   reinicios de contexto.
 - **Compuertas de fase** que verifican consistencia (criterios trazados a tests, amenazas a controles), ejecutadas por
@@ -30,6 +31,9 @@ estándares abiertos para que un equipo pueda cambiar o combinar agentes sin reh
   de capas ejecutables con referencia a ADRs, detección de cambios incompatibles en OpenAPI/AsyncAPI y una política
   única sobre cualquier escáner SARIF y SBOM CycloneDX (umbral de severidad, licencias prohibidas, excepciones con
   vencimiento).
+- **Política de organización y memoria**: política obligatoria vendorizada con desviaciones que vencen, memoria
+  revisada en PR y un servidor MCP con herramientas de solo lectura (salvo `memory_add`) para cualquier agente.
+- **Visibilidad**: reportes de trazabilidad, flujo de entrega y métricas estilo DORA en Markdown, JSON o HTML.
 - **Releases firmados**: SBOM, attestations de procedencia SLSA y de SBOM, firmas keyless con Sigstore (GitHub y GitLab).
 - **Perfiles** `lite`, `standard` y `regulated` que exigen artefactos según el tipo y el riesgo del cambio.
 - **Adaptadores** generados para los agentes que no leen `.agents/skills` de forma nativa.

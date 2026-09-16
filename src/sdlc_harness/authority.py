@@ -46,12 +46,15 @@ def check_roster(cfg: dict, strict: bool) -> Report:
         level("no .harness/roster.toml: approvals cannot be attributed to roles")
         return report
     defined = roles(cfg)
+    empty: dict[str, list[str]] = {}
     for key, allowed in cfg["_roster"].get("authority", {}).items():
         for role in allowed:
             if role not in defined:
                 report.error(f"roster: authority '{key}' references undefined role '{role}'")
             elif not defined[role]:
-                level(f"roster: role '{role}' (approves '{key}') has no members")
+                empty.setdefault(role, []).append(key)
+    for role, keys in empty.items():
+        level(f"roster: role '{role}' has no members (approves {', '.join(keys)})")
     return report
 
 
