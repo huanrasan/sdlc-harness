@@ -88,3 +88,27 @@ class RegulatedTests(HarnessCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WorkflowHygieneTests(unittest.TestCase):
+    """Shipped workflows must pass the harness's own sensors (found by the first real CI run, v0.5.1)."""
+
+    def workflows(self):
+        from helpers import ROOT
+        return sorted((ROOT / "src/sdlc_harness/template/.github/workflows").glob("*.yml")) + \
+            sorted((ROOT / ".github/workflows").glob("*.yml"))
+
+    def test_actions_pinned_to_commit_sha(self):
+        import re
+        for f in self.workflows():
+            for line in f.read_text().splitlines():
+                if m := re.match(r"^\s*-?\s*uses:\s*(\S+)", line):
+                    self.assertRegex(m.group(1), r"@[0-9a-f]{40}$", f"{f.name}: {line.strip()}")
+
+    def test_no_github_context_interpolated_in_run_steps(self):
+        from sdlc_harness import yamlish
+        for f in self.workflows():
+            data = yamlish.loads(f.read_text())
+            for job in (data.get("jobs") or {}).values():
+                for step in job.get("steps", []):
+                    self.assertNotIn("${{", step.get("run", ""), f"{f.name}: {step.get('name')}")

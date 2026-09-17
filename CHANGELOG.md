@@ -5,6 +5,15 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-17
+
+### Fixed
+- Workflow templates failed the harness's own `sensors` gate on first real use: GitHub Actions are now pinned to commit
+  SHAs and GitHub context values reach `run:` steps through environment variables (no shell interpolation).
+
+### Added
+- `.github/dependabot.yml` template to keep pinned actions current; regression tests for workflow hygiene.
+
 ## [0.5.0] - 2026-09-16
 
 ### Added

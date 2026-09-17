@@ -45,7 +45,7 @@ def template_files(ci: str) -> dict[str, bytes]:
     for rel, node in _walk(root):
         if rel.startswith("ci/"):
             continue
-        if ci != "github" and rel.startswith(".github/workflows/"):
+        if ci != "github" and (rel.startswith(".github/workflows/") or rel == ".github/dependabot.yml"):
             continue
         files[rel] = node.read_bytes()
     if ci == "gitlab":

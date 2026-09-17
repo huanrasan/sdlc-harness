@@ -8,7 +8,7 @@ las mismas compuertas deterministas, desde la especificación hasta la operació
 desarrollador individual hasta una organización regulada. No depende del stack ni de la nube: funciona en nube
 pública, nube privada, on-prem o entornos air-gapped.
 
-**Estado:** v0.5.0, versión preliminar.
+**Estado:** v0.5.1, versión preliminar.
 
 ## Por qué
 
@@ -46,7 +46,7 @@ estándares abiertos para que un equipo pueda cambiar o combinar agentes sin reh
 ## Inicio rápido
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.0
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.1
 sdlc init ../mi-servicio --profile standard      # add --adopt for an existing repository
 cd ../mi-servicio
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor

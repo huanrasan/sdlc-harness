@@ -1,0 +1,10 @@
+# Keeps SHA-pinned GitHub Actions current. Add your package ecosystems (npm, pip, maven, gomod, docker, ...).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]

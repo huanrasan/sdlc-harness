@@ -15,17 +15,19 @@ jobs:
   harness:
     runs-on: ubuntu-latest
     steps:
-      # Pin third-party actions to a full commit SHA in your fork (OpenSSF Scorecard: Pinned-Dependencies).
-      - uses: actions/checkout@v4
+      # Actions are pinned to commit SHAs (OpenSSF Scorecard: Pinned-Dependencies); Dependabot keeps them current.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
       - name: Gates (semantic checks, approvals, architecture, contracts, test-first, weakened tests)
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
-          if [ -n "${{ github.event.pull_request.base.ref }}" ]; then
-            python3 .harness/sdlc.pyz check --base "origin/${{ github.event.pull_request.base.ref }}"
+          if [ -n "$BASE_REF" ]; then
+            python3 .harness/sdlc.pyz check --base "origin/$BASE_REF"
           else
             python3 .harness/sdlc.pyz check
           fi
@@ -36,11 +38,14 @@ jobs:
         env:
           # Needs read:org to resolve team membership; use a fine-grained token if teams are used in the roster.
           GITHUB_TOKEN: ${{ secrets.SDLC_APPROVALS_TOKEN || github.token }}
-        run: python3 .harness/sdlc.pyz approvals verify --platform github --base "origin/${{ github.event.pull_request.base.ref }}"
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: python3 .harness/sdlc.pyz approvals verify --platform github --base "origin/$BASE_REF"
       - name: Conventional Commits and trailers
         if: github.event_name != 'push'
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
-          for sha in $(git rev-list --no-merges "origin/${{ github.event.pull_request.base.ref }}..HEAD"); do
+          for sha in $(git rev-list --no-merges "origin/$BASE_REF..HEAD"); do
             git log -1 --format=%B "$sha" > "$RUNNER_TEMP/msg"
             python3 .harness/sdlc.pyz commit-msg "$RUNNER_TEMP/msg" || { echo "commit $sha"; exit 1; }
           done
@@ -50,10 +55,10 @@ jobs:
     # harness.toml and .harness/exceptions.toml. Pin images by digest and mirror them for private or air-gapped CI.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
       - name: Secrets (gitleaks)
@@ -82,7 +87,7 @@ jobs:
           mv sdlc-evidence/results_sarif.sarif sdlc-evidence/iac.sarif
       - name: Evidence policy
         run: python3 .harness/sdlc.pyz evidence check
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: sdlc-evidence
@@ -92,7 +97,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/dependency-review-action@v4
+      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
         with:
           fail-on-severity: high
 
