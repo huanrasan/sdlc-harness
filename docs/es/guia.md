@@ -14,7 +14,7 @@ Elige cómo obtener la CLI (Python ≥ 3.11, sin otras dependencias):
 
 | Canal | Comando |
 |---|---|
-| pipx (recomendado) | `pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.0` y luego `sdlc ...` |
+| pipx (recomendado) | `pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.1` y luego `sdlc ...` |
 | Archivo único, sin red | descarga `sdlc-full.pyz` del release y ejecuta `python3 sdlc-full.pyz ...` |
 | Desde el código fuente | `git clone ...` y luego `PYTHONPATH=src python3 -m sdlc_harness ...` |
 
