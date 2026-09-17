@@ -1,6 +1,6 @@
 # SDLC harness configuration. Docs: https://github.com/<owner>/sdlc-harness
 [harness]
-version = "0.5.1"
+version = "0.5.2"
 # lite | standard | regulated  (see .harness/profiles/)
 profile = "standard"
 agents_md_max_lines = 150

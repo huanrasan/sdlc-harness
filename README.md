@@ -7,7 +7,7 @@ Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf, OpenCode...) the same guide
 gates, from specification to operation, with controls that scale from a solo developer to a regulated organization.
 Stack- and cloud-agnostic: public cloud, private cloud, on-prem or air-gapped.
 
-**Status:** v0.5.1, early preview.
+**Status:** v0.5.2, early preview.
 
 ## Why
 
@@ -42,7 +42,7 @@ standards so a team can switch or mix agents without rebuilding its process.
 ## Quick start
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.1
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.2
 sdlc init ../my-service --profile standard      # add --adopt for an existing repository
 cd ../my-service
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor

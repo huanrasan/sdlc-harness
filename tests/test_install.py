@@ -105,6 +105,13 @@ class WorkflowHygieneTests(unittest.TestCase):
                 if m := re.match(r"^\s*-?\s*uses:\s*(\S+)", line):
                     self.assertRegex(m.group(1), r"@[0-9a-f]{40}$", f"{f.name}: {line.strip()}")
 
+    def test_dependabot_configs_set_cooldown(self):
+        from helpers import ROOT
+        from sdlc_harness import yamlish
+        for f in (ROOT / "src/sdlc_harness/template/.github/dependabot.yml", ROOT / ".github/dependabot.yml"):
+            for update in yamlish.loads(f.read_text())["updates"]:
+                self.assertGreaterEqual(update.get("cooldown", {}).get("default-days", 0), 1, f.name)
+
     def test_no_github_context_interpolated_in_run_steps(self):
         from sdlc_harness import yamlish
         for f in self.workflows():

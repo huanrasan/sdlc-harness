@@ -5,6 +5,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Wait before proposing freshly published versions (supply-chain attacks are often caught within days).
+    cooldown:
+      default-days: 7
     groups:
       github-actions:
         patterns: ["*"]

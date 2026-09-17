@@ -5,6 +5,16 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-09-17
+
+### Fixed
+- Dependabot template sets a 7-day `cooldown` (Semgrep `dependabot-missing-cooldown`), which made the v0.5.1 template fail
+  its own `sensors` gate.
+
+### Added
+- CI job `template-sensors`: installs the template and runs the shipped Semgrep and gitleaks scanners plus
+  `sdlc evidence check` against it before any release.
+
 ## [0.5.1] - 2026-09-17
 
 ### Fixed
