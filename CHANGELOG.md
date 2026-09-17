@@ -5,6 +5,21 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-09-17
+
+### Added
+- Step-by-step walkthrough in English and Spanish with Mermaid diagrams, a table of which role approves each artifact
+  per phase and profile, a gate troubleshooting table and a command cheat sheet.
+- Mermaid diagrams in the READMEs and the guides (harness overview, phase gates, approval sequence, repository layout,
+  upgrade decisions).
+- `docs/sdlc/README.md` in the template: how work flows in the installed repository, everyday commands, a snippet that
+  prints the approval matrix from the roster and profile.
+- Documentation tests: relative links and anchors resolve, English/Spanish docs come in pairs, Mermaid blocks are valid.
+
+### Changed
+- Research documents present the evaluated projects and frameworks directly, without referring to a third-party
+  aggregator repository.
+
 ## [0.5.2] - 2026-09-17
 
 ### Fixed

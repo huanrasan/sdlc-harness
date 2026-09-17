@@ -66,9 +66,10 @@ quedan como adaptadores opcionales que invocan los mismos comandos.
 imponerla la plataforma (CODEOWNERS, protección de ramas, entornos protegidos) y no un campo que el agente
 pueda editar.
 
-## 4. Fuentes del repositorio de referencia: qué se usó y cómo
+## 4. Proyectos y marcos evaluados: qué se usó y cómo
 
-Se revisó solo la lista de fuentes de `csalamando/harness-sdlc`. No se copió su código, estructura ni textos.
+Cada elemento de la lista se estudió en su repositorio o publicación original. No se copió código ni texto, y las
+fuentes con licencia incompatible solo se citan (ver [ACKNOWLEDGEMENTS.md](../../ACKNOWLEDGEMENTS.md)).
 
 | Fuente | Uso en este arnés |
 |---|---|

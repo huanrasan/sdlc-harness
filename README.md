@@ -7,7 +7,7 @@ Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf, OpenCode...) the same guide
 gates, from specification to operation, with controls that scale from a solo developer to a regulated organization.
 Stack- and cloud-agnostic: public cloud, private cloud, on-prem or air-gapped.
 
-**Status:** v0.5.2, early preview.
+**Status:** v0.5.3, early preview.
 
 ## Why
 
@@ -39,10 +39,28 @@ standards so a team can switch or mix agents without rebuilding its process.
 - **Adapters** generated for agents that do not read `.agents/skills` natively.
 - **Controls matrix** mapped to NIST SSDF, SLSA, OWASP Agentic Top 10, DORA and AI governance frameworks.
 
+## How it works
+
+```mermaid
+flowchart LR
+    G["Guides<br/>AGENTS.md + skills + memory"] --> AG(["Any coding agent"])
+    AG --> EV["Evidence per change<br/>docs/changes/id/"]
+    AG --> CODE["Code and tests"]
+    EV --> GATE["Deterministic gates<br/>sdlc check"]
+    CODE --> SENS["Sensors<br/>tests, scanners, history"]
+    GATE --> CI["CI is authoritative"]
+    SENS --> CI
+    HUM(["Humans: approval receipts<br/>bound to content"]) --> CI
+    CI --> REL(["Merge, signed release, measured outcome"])
+```
+
+Phases: `discover → spec → design → plan → implement → verify → review → release → operate`. Each one produces
+evidence, and the next phase does not start until the gate passes and the required human has approved.
+
 ## Quick start
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.2
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.3
 sdlc init ../my-service --profile standard      # add --adopt for an existing repository
 cd ../my-service
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor
@@ -55,7 +73,8 @@ Then ask your agent to work on the change; `AGENTS.md` routes it to the `sdlc-or
 
 | | English | Español |
 |---|---|---|
-| User guide | [docs/en/guide.md](docs/en/guide.md) | [docs/es/guia.md](docs/es/guia.md) |
+| Step-by-step walkthrough | [docs/en/walkthrough.md](docs/en/walkthrough.md) | [docs/es/recorrido.md](docs/es/recorrido.md) |
+| User guide (reference) | [docs/en/guide.md](docs/en/guide.md) | [docs/es/guia.md](docs/es/guia.md) |
 | Research and design rationale | [docs/en/research.md](docs/en/research.md) | [docs/es/investigacion.md](docs/es/investigacion.md) |
 | Controls matrix | [docs/en/controls.md](docs/en/controls.md) | [docs/es/controles.md](docs/es/controles.md) |
 | Decisions (ADRs) | [docs/adr/](docs/adr/README.md) | |
