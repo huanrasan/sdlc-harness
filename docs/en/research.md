@@ -59,9 +59,10 @@ controls**: git hooks and CI are authoritative, and agent hooks are optional ada
 **Key governance principle:** an agent never approves its own work. Human approval must be enforced by the
 platform (CODEOWNERS, branch protection, protected environments), not by a field the agent can edit.
 
-## 4. Reference repository sources: what was used and how
+## 4. Projects and frameworks evaluated: what was used and how
 
-Only the source list of `csalamando/harness-sdlc` was reviewed. None of its code, structure or text was copied.
+Every item below was studied from its own repository or publication. No code or text was copied; incompatible licences
+are cited only (see [ACKNOWLEDGEMENTS.md](../../ACKNOWLEDGEMENTS.md)).
 
 | Source | Use in this harness |
 |---|---|

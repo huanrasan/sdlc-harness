@@ -8,7 +8,7 @@ las mismas compuertas deterministas, desde la especificación hasta la operació
 desarrollador individual hasta una organización regulada. No depende del stack ni de la nube: funciona en nube
 pública, nube privada, on-prem o entornos air-gapped.
 
-**Estado:** v0.5.2, versión preliminar.
+**Estado:** v0.5.3, versión preliminar.
 
 ## Por qué
 
@@ -43,10 +43,28 @@ estándares abiertos para que un equipo pueda cambiar o combinar agentes sin reh
 - **Adaptadores** generados para los agentes que no leen `.agents/skills` de forma nativa.
 - **Matriz de controles** mapeada a NIST SSDF, SLSA, OWASP Agentic Top 10, DORA y marcos de gobierno de IA.
 
+## Cómo funciona
+
+```mermaid
+flowchart LR
+    G["Guías<br/>AGENTS.md + skills + memoria"] --> AG(["Cualquier agente de programación"])
+    AG --> EV["Evidencia por cambio<br/>docs/changes/id/"]
+    AG --> CODE["Código y tests"]
+    EV --> GATE["Compuertas deterministas<br/>sdlc check"]
+    CODE --> SENS["Sensores<br/>tests, escáneres, historia"]
+    GATE --> CI["La CI es la autoridad"]
+    SENS --> CI
+    HUM(["Personas: recibos de aprobación<br/>ligados al contenido"]) --> CI
+    CI --> REL(["Merge, release firmado, resultado medido"])
+```
+
+Fases: `discover → spec → design → plan → implement → verify → review → release → operate`. Cada una produce evidencia,
+y la siguiente no empieza hasta que la compuerta pasa y la persona correspondiente aprobó.
+
 ## Inicio rápido
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.2
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.3
 sdlc init ../mi-servicio --profile standard      # add --adopt for an existing repository
 cd ../mi-servicio
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor
@@ -59,7 +77,8 @@ Luego pídele a tu agente que trabaje en el cambio: `AGENTS.md` lo dirige a la s
 
 | | Español | English |
 |---|---|---|
-| Guía de uso | [docs/es/guia.md](docs/es/guia.md) | [docs/en/guide.md](docs/en/guide.md) |
+| Guía paso a paso | [docs/es/recorrido.md](docs/es/recorrido.md) | [docs/en/walkthrough.md](docs/en/walkthrough.md) |
+| Guía de uso (referencia) | [docs/es/guia.md](docs/es/guia.md) | [docs/en/guide.md](docs/en/guide.md) |
 | Investigación y fundamentos del diseño | [docs/es/investigacion.md](docs/es/investigacion.md) | [docs/en/research.md](docs/en/research.md) |
 | Matriz de controles | [docs/es/controles.md](docs/es/controles.md) | [docs/en/controls.md](docs/en/controls.md) |
 | Decisiones (ADRs) | | [docs/adr/](docs/adr/README.md) |

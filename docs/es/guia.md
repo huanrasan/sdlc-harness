@@ -1,6 +1,7 @@
 # Guía de uso
 
 > English version: [../en/guide.md](../en/guide.md)
+> ¿Primera vez? Empezá por la [guía paso a paso](recorrido.md); esta página es la referencia.
 
 ## Requisitos
 
@@ -14,7 +15,7 @@ Elige cómo obtener la CLI (Python ≥ 3.11, sin otras dependencias):
 
 | Canal | Comando |
 |---|---|
-| pipx (recomendado) | `pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.2` y luego `sdlc ...` |
+| pipx (recomendado) | `pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.3` y luego `sdlc ...` |
 | Archivo único, sin red | descarga `sdlc-full.pyz` del release y ejecuta `python3 sdlc-full.pyz ...` |
 | Desde el código fuente | `git clone ...` y luego `PYTHONPATH=src python3 -m sdlc_harness ...` |
 
@@ -66,6 +67,21 @@ sdlc upgrade --dry-run               # revisar
 sdlc upgrade                         # aplicar; luego integrar los *.sdlc-new y ejecutar check
 ```
 
+```mermaid
+flowchart TD
+    START(["sdlc upgrade"]) --> Q1{"¿El archivo existe<br/>en el repositorio?"}
+    Q1 -- "no" --> ADD["se agrega"]
+    Q1 -- "sí" --> Q2{"¿Es archivo de configuración<br/>harness.toml / roster.toml?"}
+    Q2 -- "sí" --> MERGE["se agregan tablas y claves faltantes<br/>nunca se cambian tus valores"]
+    Q2 -- "no" --> Q3{"¿Mismo contenido que<br/>la versión nueva?"}
+    Q3 -- "sí" --> SKIP["nada que hacer"]
+    Q3 -- "no" --> Q4{"¿Sin modificar desde<br/>que se instaló?"}
+    Q4 -- "sí" --> UPD["se actualiza"]
+    Q4 -- "no" --> Q5{"¿La plantilla también<br/>cambió?"}
+    Q5 -- "no" --> KEEP["se conserva tu versión"]
+    Q5 -- "sí" --> NEW["se escribe archivo.sdlc-new<br/>vos lo integrás y lo borrás"]
+```
+
 `.harness/manifest.toml` registra lo instalado. Los archivos sin modificar se actualizan, los personalizados se conservan
 y, cuando tanto tú como el release cambiaron un archivo, la nueva versión se escribe al lado como `<archivo>.sdlc-new`.
 `harness.toml` y `roster.toml` solo reciben las tablas y claves que falten. El `.harness/sdlc.pyz` se regenera de forma
@@ -112,6 +128,7 @@ verifican la consistencia:
 
 ## Aprobaciones
 
+En [quién aprueba qué](recorrido.md#6-quién-aprueba-qué) está el rol de cada artefacto y perfil.
 Los perfiles marcan artefactos con `approve = true`. Un artefacto así bloquea la fase siguiente hasta que una persona
 con un rol autorizado (ver `[authority]` en `.harness/roster.toml`) registra un recibo y aprueba el pull request:
 
@@ -224,15 +241,32 @@ procedencia SLSA y de SBOM, firmas keyless con Sigstore y la publicación, detr�
 
 ## Cómo funciona
 
-```text
-            guías (feedforward)                          sensores (feedback)
-  AGENTS.md ──> .agents/skills/<fase>/SKILL.md     tests, linters, escáneres (CI del stack)
-       │                  │                        sdlc check / compuertas de fase
-       ▼                  ▼                        revisión independiente (contexto limpio)
-  cualquier agente ──escribe──> docs/changes/<id>/* ──> git hooks (rápido) ──> CI (autoridad) ──> aprobación humana (plataforma)
-       ▲
-  adaptadores generados por `sdlc sync` desde .harness/adapters.toml (CLAUDE.md, GEMINI.md, enlaces de skills)
+```mermaid
+flowchart LR
+    AG(["Cualquier agente de programación"])
+    A["AGENTS.md + .agents/skills/<br/>guías (feedforward)"]
+    E["docs/changes/id/<br/>evidencia"]
+    C["Código y tests"]
+    H["git hooks<br/>rápidos, evitables"]
+    K["sdlc check<br/>compuertas semánticas + sensores"]
+    R["sdlc approve<br/>recibo humano (SHA-256)"]
+    CI["CI: compuertas + approvals verify<br/>autoridad"]
+    P(["Plataforma: protección de rama<br/>CODEOWNERS"])
+
+    A --> AG
+    AG --> E
+    AG --> C
+    E --> K
+    C --> H
+    H --> K
+    K --> CI
+    R --> CI
+    CI --> P
+    P --> M(["Merge"])
 ```
+
+Los adaptadores que genera `sdlc sync` desde `.harness/adapters.toml` (`CLAUDE.md`, `GEMINI.md`, enlaces de skills)
+hacen visibles las mismas guías a cada agente. El recorrido completo y narrado está en la [guía paso a paso](recorrido.md).
 
 | Ruta | Propósito |
 |---|---|
