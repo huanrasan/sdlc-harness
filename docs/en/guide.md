@@ -13,7 +13,7 @@ Choose one way to get the CLI (Python >= 3.11, no other dependencies):
 
 | Channel | Command |
 |---|---|
-| pipx (recommended) | `pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.1` then `sdlc ...` |
+| pipx (recommended) | `pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.2` then `sdlc ...` |
 | Single file, offline | download `sdlc-full.pyz` from the release, then `python3 sdlc-full.pyz ...` |
 | From source | `git clone ...` then `PYTHONPATH=src python3 -m sdlc_harness ...` |
 
