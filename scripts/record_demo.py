@@ -55,7 +55,7 @@ def record(workdir: Path) -> list[tuple[str, str]]:
                       .replace('[roles.tech-lead]\nmembers = []', '[roles.tech-lead]\nmembers = ["tomas"]'))
     step("sdlc new feature booking-reminders --risk medium --scope ui",
          "new", "feature", "booking-reminders", "--risk", "medium", "--scope", "ui")
-    change_id = next((workdir / "docs/changes").iterdir()).name
+    change_id = next(p.name for p in sorted((workdir / "docs/changes").iterdir()) if (p / "change.toml").exists())
     step("sdlc status", "status")
 
     example = ROOT / "docs/examples/2026-09-17-staff-csv-export"
