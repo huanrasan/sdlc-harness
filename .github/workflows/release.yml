@@ -46,7 +46,12 @@ jobs:
           subject-path: "dist/*"
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
       - name: Keyless signatures
-        run: for f in dist/*; do cosign sign-blob --yes --bundle "$f.sigstore.json" "$f"; done
+        # --new-bundle-format is cosign 3's default; set explicitly so the bundle format is our choice, not the
+        # installer's. cosign 2.x needs the same flag on verify-blob to read these bundles.
+        run: |
+          for f in dist/*; do
+            cosign sign-blob --yes --new-bundle-format --bundle "$f.sigstore.json" "$f"
+          done
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: dist
