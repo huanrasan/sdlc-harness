@@ -5,6 +5,15 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-09-18
+
+### Fixed
+- The `sdlc-orchestrator` skill told agents to ask a human to confirm an `architecture` or `retirement`
+  classification before opening the change record, so an agent could end its turn with a correct analysis and
+  nothing written to disk. Found by an eval run against a real agent, which failed for exactly that reason while
+  following the guidance. The confirmation now happens with the record already open and the question written
+  inside it.
+
 ## [0.7.0] - 2026-09-18
 
 Everything here comes from taking the harness through a complete lifecycle on a real application, and fixes what that

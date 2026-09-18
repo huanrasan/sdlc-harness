@@ -26,8 +26,11 @@ Trivial edits (typos, comments, formatting, dependency bumps with green CI) need
 Declare scopes so conditional artifacts apply: `ui` (screens), `api` (public contracts), `data` (schemas, datasets),
 `personal-data`, `infra` (cloud or on-prem resources, cost), `ai` (LLMs, ML models, agents in the product).
 
-State the classification and the reason in one sentence and ask the human to confirm when risk is `high`
-or the type is `architecture` or `retirement`.
+State the classification and the reason in one sentence. When risk is `high`, or the type is `architecture` or
+`retirement`, a human confirms before the change leaves its first phase - but open the change record first and write
+the question inside it. Opening the record is cheap and reversible (`type`, `risk` and `scopes` are fields in
+`change.toml`), while ending a turn with nothing on disk loses the analysis at the next context reset. Never stop
+with zero evidence written.
 
 Before starting, search memory for prior decisions and pitfalls: `python3 .harness/sdlc.pyz memory search "<topic>"`.
 
