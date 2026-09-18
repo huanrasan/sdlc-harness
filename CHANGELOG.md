@@ -5,6 +5,30 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-09-18
+
+### Fixed
+- The `sdlc-orchestrator` skill told agents to ask a human to confirm an `architecture` or `retirement`
+  classification before opening the change record, so an agent could end its turn with a correct analysis and
+  nothing written to disk. Found by an eval run against a real agent, which failed for exactly that reason while
+  following the guidance. The confirmation now happens with the record already open and the question written
+  inside it.
+- `sdlc upgrade` run from the vendored `.harness/sdlc.pyz` ended in a `ValueError` traceback, because that build
+  carries no templates by design. It now explains that the command needs the installed package or `sdlc-full.pyz`.
+  Found while validating a real repository after its upgrade.
+- The eval runner counted an agent that never ran - expired session, missing credential, usage limit - as a
+  behavioural failure. Trials where the agent exits non-zero without touching the repository are now reported as
+  `ERROR`, excluded from the pass rates and listed as "not measured", and the runner exits 2 when nothing could be
+  measured. A usage limit hit mid-run is what exposed this.
+
+### Changed
+- Template workflows pin the current action releases (checkout 7.0.1, setup-python 7.0.0, attest-build-provenance
+  4.2.2, attest-sbom 4.1.0, upload-artifact 7.0.1, cosign-installer 4.1.2, dependency-review 5.0.0). Dependabot only
+  scans a repository's own `.github/workflows`, so the shipped template does not get these updates by itself.
+- Release signing passes `--new-bundle-format` explicitly. cosign-installer 4 ships cosign 3, where that flag
+  defaults to true, so the bundle format would otherwise have changed silently between releases. cosign 2.x needs
+  the same flag on `verify-blob` to read the bundles; the workflow header says so.
+
 ## [0.7.0] - 2026-09-18
 
 Everything here comes from taking the harness through a complete lifecycle on a real application, and fixes what that

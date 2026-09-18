@@ -2,6 +2,7 @@ import json
 import subprocess
 import sys
 import unittest
+from pathlib import Path as P
 import zipfile
 from pathlib import Path
 
@@ -173,6 +174,33 @@ class BaselineTests(HarnessCase):
         self.assertIn("awaits a human approver", out)
 
 
+class VendoredCliLimitsTests(unittest.TestCase):
+    """The vendored `.harness/sdlc.pyz` has no templates; commands that need them must say so, not crash.
+
+    Found while validating a real repository after an upgrade: `sdlc upgrade` from the vendored CLI ended in a
+    ValueError traceback from zipfile.
+    """
+
+    def test_upgrade_from_the_vendored_cli_explains_itself(self):
+        import subprocess
+        import sys
+        import tempfile
+        from pathlib import Path as P
+
+        from helpers import run, sh
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = P(tmp) / "repo"
+            repo.mkdir()
+            sh(repo, "git", "init", "-q")
+            self.assertEqual(run("init", str(repo), "--profile", "lite")[0], 0)
+            proc = subprocess.run([sys.executable, str(repo / ".harness/sdlc.pyz"), "upgrade", "--dry-run"],
+                                  cwd=repo, capture_output=True, text=True, env={"PATH": "/usr/bin:/bin"})
+            output = proc.stdout + proc.stderr
+            self.assertNotIn("Traceback", output)
+            self.assertIn("ships without templates", output)
+            self.assertIn("sdlc-full.pyz", output)
+
+
 class DistributionTests(unittest.TestCase):
     def test_generated_packages_are_in_sync(self):
         proc = subprocess.run([sys.executable, str(ROOT / "scripts/build_distribution.py"), "--check"],
@@ -192,6 +220,21 @@ class EvalGraderTests(unittest.TestCase):
                                       capture_output=True, text=True)
                 self.assertEqual(proc.returncode, expected, proc.stdout + proc.stderr)
                 self.assertIn("100%" if expected == 0 else "| 0% (0/7) |", proc.stdout)
+
+    def test_an_agent_that_never_ran_is_not_counted_as_a_behavioural_failure(self):
+        """A usage limit or an expired session must not read as the agent breaking the harness."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as out:
+            agents = P(out) / "agents.toml"
+            agents.write_text('[agents.broken]\ncommand = ["sh", "-c", "echo \'session limit reached\' >&2; exit 1"]\n'
+                              "timeout = 30\n")
+            proc = subprocess.run([sys.executable, str(ROOT / "evals/run.py"), "--agent", "broken",
+                                   "--agents-file", str(agents), "--scenario", "trivial-no-ceremony",
+                                   "--output", out], capture_output=True, text=True)
+            self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+            self.assertIn("ERROR", proc.stdout)
+            self.assertIn("could not be measured", proc.stdout)
+            self.assertIn("n/a", proc.stdout)
 
 
 if __name__ == "__main__":

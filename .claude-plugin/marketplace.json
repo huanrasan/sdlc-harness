@@ -9,7 +9,7 @@
     {
       "name": "sdlc-harness",
       "description": "Agent-agnostic SDLC harness: skills for discovery to retirement, change records, human approvals, deterministic gates and sensors.",
-      "version": "0.7.0",
+      "version": "0.7.1",
       "source": "./",
       "license": "MIT",
       "homepage": "https://github.com/huanrasan/sdlc-harness"
