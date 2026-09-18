@@ -27,8 +27,11 @@ templates = "docs/sdlc/templates"
 test_paths = []
 
 [tdd]
-# Globs (fnmatch). Empty test_globs uses common conventions for Python, JS/TS, Go, JVM, .NET and Ruby.
+# Globs, git-style: `**` spans any number of directories (including none), `*` and `?` stay inside one segment.
+# So `src/**/*.ts` matches both `src/proxy.ts` and `src/lib/deep/proxy.ts`; `src/*.ts` matches only the first.
+# Empty test_globs uses common conventions for Python, JS/TS, Go, JVM, .NET and Ruby.
 # Empty source_globs treats any file with a code extension outside docs/ and harness folders as source.
+# Run `sdlc tdd --explain` to see how every tracked file is classified before trusting this.
 test_globs = []
 source_globs = []
 
@@ -43,3 +46,14 @@ dir = "sdlc-evidence"
 fail_on = "high"
 # SPDX identifiers denied in dependencies (checked in SBOM license data).
 license_deny = ["AGPL-1.0-only", "AGPL-1.0-or-later", "AGPL-3.0-only", "AGPL-3.0-or-later", "SSPL-1.0", "BUSL-1.1"]
+
+[release]
+# `.github/workflows/sdlc-release.yml` runs `scripts/build-release` (executable, no arguments) and expects it to
+# leave every published artifact in dist/. Everything after that - SBOM, provenance, signatures, the GitHub
+# release - operates on dist/.
+# sbom_source is what Syft scans. `dir:dist` inventories files; use the form that matches the real artifact, or
+# the SBOM will describe the directory instead of what you ship:
+#   docker-archive:dist/app.tar   OCI image saved with `docker save`
+#   oci-archive:dist/app.oci      OCI layout tarball
+#   file:dist/app.jar             a single binary, jar or wheel
+sbom_source = "dir:dist"

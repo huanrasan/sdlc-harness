@@ -10,6 +10,10 @@
 |---|---|---|
 | AC-1 | <!-- sdlc:fill --> | |
 
+Result is `pass`, `verified` or `n/a`. Use `blocked` or `pending` when a criterion honestly cannot be verified yet;
+it must then name who owns it and why, as in `blocked - owner: rita - needs repository admin to protect the branch`.
+The gate stays red (verify does not close) but the record says what is true.
+
 ## Security and quality sensors
 | Sensor | Tool | Result | Findings |
 |---|---|---|---|

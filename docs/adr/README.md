@@ -18,3 +18,5 @@ summaries in Spanish are in [docs/es/investigacion.md](../es/investigacion.md).
 | [0011](0011-visibility-from-repository-data.md) | Visibility reports computed from repository data | Accepted |
 | [0012](0012-distribution-and-upgrades.md) | Distribution channels and manifest-based upgrades | Accepted |
 | [0013](0013-cross-agent-behavioural-evals.md) | Cross-agent behavioural evals graded on repository state | Accepted |
+| [0014](0014-approval-integrity-for-one-maintainer.md) | A verified commit signature replaces the platform review for a single maintainer | Accepted |
+| [0015](0015-amendment-instead-of-append-only-sections.md) | Re-approval shows the diff instead of exempting parts of a document | Accepted |

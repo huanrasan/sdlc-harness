@@ -63,6 +63,12 @@ flowchart LR
 Decide the profile: `lite` (individuals, minimum evidence), `standard` (product teams, approvals from the start) or
 `regulated` (audit duties, every artifact approved). You can change it later in `harness.toml`.
 
+Two consequences worth knowing before you choose. In `standard` every change, including a low-risk `fix`, needs an
+approved `spec.md`; if that would make each trivial fix wait on a signature, `lite` is the honest choice. And if you
+are the only maintainer, set `separation_of_duties = false` in `.harness/roster.toml`: GitHub does not let you
+approve your own pull request, so the harness then accepts a receipt that arrives in a commit whose signature the
+platform verifies. Turn on commit signing before you start.
+
 ## 3. Install and configure (about ten minutes)
 
 ```bash
@@ -300,8 +306,12 @@ The gate always names the file and what is missing. The most frequent messages:
 | `AC-2 from spec.md is missing in the traceability table` | criterion without a planned test | add the row in `plan.md` |
 | `AC-1 result is 'fail'` | verification reports a failure | fix the code, do not edit the result |
 | `requires approval by one of roles [...]` | human gate pending | a person with that role runs `sdlc approve` |
-| `approval by X is stale (content changed)` | the artifact changed after approval | approve the new content again |
+| `approval by X is stale (content changed)` | the artifact changed after approval | the approver runs `sdlc amend <id> <artifact>`, reads the diff and confirms |
 | `no current approval from 'X' on the pull/merge request` | receipt exists but nobody approved on the platform | approve the pull request |
+| `must have a signature the platform verifies` | single-maintainer mode without commit signing | sign the commit that adds the receipt, or turn separation of duties back on |
+| `AC-9 is blocked (owner: rita)` | a criterion honestly cannot be verified yet | finish it, or record `n/a` with the reason; verify does not close until then |
+| `Guardrails does not cover alert thresholds` | the cost section is missing one of the four controls | state budget, thresholds, allocation tags and idle policy |
+| `deviation 'X' is proposed and awaits approval` | a proposal has no approver | an architect or security role runs `sdlc deviation approve` |
 | `receipt was added after the approval` | wrong order | commit the receipt, push, then approve the pull request |
 | `separation of duties - approver authored the change` | the same person wrote and approved | another approver, or `separation_of_duties = false` |
 | `test-first: commit ... changes source before any test change` | code before tests | reorder commits or add a `TDD-Waiver:` trailer |
@@ -330,8 +340,14 @@ chains and platform approvals, and those edits fail louder.
 | `sdlc sync` | agent or human | regenerate skills index and agent adapters |
 | `sdlc new <type> <slug> --risk <r> [--scope ...]` | agent | open a change record |
 | `sdlc phase <id> <phase>` | agent | advance when the gate passes |
-| `sdlc check [--change <id>] [--base <ref>]` | both, CI | all gates; with `--base` also history sensors |
+| `sdlc check [--change <id>] [--staged] [--base <ref>]` | both, CI | all gates; `--staged` only what the commit touches; with `--base` also history sensors |
 | `sdlc approve <id> <artifact> --as <user> --role <role>` | **human only** | approval receipt |
+| `sdlc amend <id> <artifact> --as <user> --role <role>` | **human only** | show the diff since the approval and re-approve in one step |
+| `sdlc deviation propose <policy> --reason ... [--days N]` | agent | record accepted risk against organization policy, pending a human |
+| `sdlc deviation approve <policy> --as <user> --role <role>` | **human only** | confirm that deviation; it still expires |
+| `sdlc exception propose <rule> [<path>] --reason ...` | agent | same, for a scanner finding |
+| `sdlc tdd --explain` | both | how every tracked file is classified (test / source / other) |
+| `sdlc config <key> [--default <v>]` | scripts, CI | read one value from `harness.toml` |
 | `sdlc approvals verify --base <ref>` | CI | confirm approvals against the platform |
 | `sdlc evidence check` / `baseline` | CI / human | scanner policy; record pre-existing findings |
 | `sdlc tdd --base <ref>` | CI | test-first and weakened tests |

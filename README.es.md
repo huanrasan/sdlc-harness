@@ -8,7 +8,7 @@ las mismas compuertas deterministas, desde la especificación hasta la operació
 desarrollador individual hasta una organización regulada. No depende del stack ni de la nube: funciona en nube
 pública, nube privada, on-prem o entornos air-gapped.
 
-**Estado:** v0.6.0, versión preliminar.
+**Estado:** v0.7.0, versión preliminar.
 
 ## Por qué
 
@@ -27,6 +27,9 @@ estándares abiertos para que un equipo pueda cambiar o combinar agentes sin reh
   una CLI sin dependencias incluida en cada repositorio, idéntica en git hooks y en CI (GitHub Actions y GitLab).
 - **Aprobaciones humanas ligadas al contenido**: recibos SHA-256 por artefacto, roles y matriz de autoridad, generación
   de CODEOWNERS, separación de funciones, verificación contra la plataforma en CI y log de auditoría encadenado por hash.
+  Quien mantiene el repositorio en soledad, y no puede aprobar su propio pull request, prueba la aprobación con una
+  firma de commit verificada. `sdlc amend` le muestra a quien aprueba qué cambió desde su aprobación, para que nadie
+  tenga que elegir entre un recibo válido y un documento verdadero.
 - **Sensores deterministas**: orden test-first y detección de tests debilitados a partir de la historia de git, reglas
   de capas ejecutables con referencia a ADRs, detección de cambios incompatibles en OpenAPI/AsyncAPI y una política
   única sobre cualquier escáner SARIF y SBOM CycloneDX (umbral de severidad, licencias prohibidas, excepciones con
@@ -67,7 +70,7 @@ y la siguiente no empieza hasta que la compuerta pasa y la persona correspondien
 ## Inicio rápido
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.6.0
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.0
 sdlc init ../mi-servicio --interactive           # instalación guiada; agregá --adopt en un repo existente
 cd ../mi-servicio
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor

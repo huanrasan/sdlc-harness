@@ -5,6 +5,48 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-18
+
+Everything here comes from taking the harness through a complete lifecycle on a real application, and fixes what that
+run exposed.
+
+### Added
+- `sdlc amend <change> <artifact> --as <user> --role <role>`: shows the approver the diff since their approval and
+  records a fresh receipt once they confirm. Refuses to run outside a terminal, so an agent cannot use it
+  ([ADR-0015](docs/adr/0015-amendment-instead-of-append-only-sections.md)).
+- `sdlc deviation propose|approve` and `sdlc exception propose|approve`: an agent can write the proposal, only a human
+  with an authorized role approves it, and `sdlc check` lists what is pending. Accepted risk now expires on its own
+  instead of living in prose.
+- `verification.md` accepts `blocked` and `pending` results when they name an owner and a reason. The gate stays red,
+  so the phase does not advance, but the record can say what is actually true.
+- `sdlc tdd --explain`: how every tracked file is classified (test / source / other), and a warning when source files
+  fall outside the globs, which used to disable the test-first sensor silently.
+- `sdlc check --staged`: the pre-commit hook now validates only the change records the commit touches.
+- `sdlc config <key> [--default <v>]`: read one value from `harness.toml` in scripts and CI.
+- Workflow linting in the shipped `sdlc-gates.yml` and in this repository's CI: actionlint (with shellcheck) and
+  zizmor. The harness required actions pinned by SHA and no interpolation of untrusted context into `run:`; now it
+  verifies it.
+
+### Changed
+- With `separation_of_duties = false`, `sdlc approvals verify` accepts a receipt that arrives in a commit whose
+  signature the platform verifies, instead of requiring a self-review that GitHub forbids. The single-maintainer mode
+  was unreachable before ([ADR-0014](docs/adr/0014-approval-integrity-for-one-maintainer.md)).
+- Approval gate messages spell out the exact command a human must run.
+- `cost.md`: the production total accepts a currency before or after the amount (`USD 77,40`), and the guardrails
+  section is judged by content (budget, alert thresholds, allocation tags, idle policy) instead of by punctuation.
+  Both messages now say what is missing and show a valid example.
+- `tdd` globs follow git semantics: `**` spans any number of directories including none, `*` and `?` stay inside one
+  segment. `src/**/*.ts` now matches `src/proxy.ts`.
+- Scanner images in every shipped workflow are pinned by digest, all checkouts set `persist-credentials: false`, and
+  `dependency-review` only runs where the dependency graph exists (it failed on every private repository without
+  GitHub Advanced Security).
+- The release build contract (`scripts/build-release`, executable, no arguments, artifacts in `dist/`) is documented
+  in `harness.toml` and the `sdlc-release` skill, and the SBOM source is configurable with `[release] sbom_source`,
+  so a container release no longer produces an SBOM of the directory holding the image.
+- Memory entry file names are ASCII and cut on a word boundary.
+- Invalid TOML in `harness.toml` reports a readable error instead of a traceback.
+- `sdlc explain` covers the new messages, plus the `amend` and `separation-of-duties` concepts.
+
 ## [0.6.0] - 2026-09-18
 
 ### Added

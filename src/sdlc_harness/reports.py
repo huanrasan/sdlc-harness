@@ -83,7 +83,9 @@ def trace(root: Path, cfg: dict, change_dir: Path) -> dict:
         "criteria": criteria, "threats": threats, "adrs": change.get("adrs", []), "approvals": approvals,
         "commits": sorted(commits.values(), key=lambda c: c["date"]), "release": release.get("version", ""),
         "gaps": [f"{c['id']} has no planned test" for c in criteria if not c["tests"]]
-                + [f"{c['id']} not verified" for c in criteria if c["result"].lower() not in gates.PASS_RESULTS]
+                + [f"{c['id']} is {c['result'].lower()} ({c['evidence']})" if c["result"].lower() in gates.OPEN_RESULTS
+                   else f"{c['id']} not verified"
+                   for c in criteria if c["result"].lower() not in gates.PASS_RESULTS]
                 + [f"{t['id']} has no control" for t in threats if not t["control"]]
                 + [f"approval of {a['artifact']} by {a['approver']} is stale" for a in approvals if a["state"] == "stale"],
     }

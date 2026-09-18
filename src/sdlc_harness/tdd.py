@@ -8,7 +8,7 @@ A commit trailer `TDD-Waiver: <reason>` or `Test-Waiver: <reason>` records a jus
 """
 from __future__ import annotations
 
-import fnmatch
+import functools
 import re
 from pathlib import Path
 
@@ -35,8 +35,27 @@ WEAKENING_PATTERNS = [
 RUBY_WEAKENING = re.compile(r"^\s*(skip|pending|xit)\b")
 
 
+@functools.lru_cache(maxsize=512)
+def _pattern(glob: str) -> re.Pattern:
+    """Git-style glob: `**` spans directories (and may match none), `*` and `?` stay within one segment.
+
+    Plain `fnmatch` makes `*` cross `/`, which classifies `src/a/b.ts` as matching `src/*.ts`, and makes `**` require
+    at least one directory, so `src/**/*.ts` misses `src/proxy.ts`. Both mistakes are silent, so we translate instead.
+    """
+    segments, out = glob.split("/"), []
+    for i, seg in enumerate(segments):
+        last = i == len(segments) - 1
+        if seg == "**":  # a trailing '**' matches everything below; otherwise it consumes its own separator
+            out.append(".*" if last else "(?:[^/]+/)*")
+            continue
+        out.append("".join("[^/]*" if c == "*" else "[^/]" if c == "?" else re.escape(c) for c in seg))
+        if not last:
+            out.append("/")
+    return re.compile("^" + "".join(out) + "$")
+
+
 def _match(path: str, globs: list[str]) -> bool:
-    return any(fnmatch.fnmatch(path, g) or (g.startswith("**/") and fnmatch.fnmatch(path, g[3:])) for g in globs)
+    return any(_pattern(g).match(path) for g in globs)
 
 
 def classify(path: str, cfg: dict) -> str:
@@ -121,3 +140,32 @@ def _diff_names(root: Path, base: str) -> list[tuple[str, str]]:
         parts = line.split("\t")
         rows.append((parts[0][0], parts[-1]))
     return rows
+
+
+def explain(root: Path, cfg: dict) -> Report:
+    """Print how every tracked file is classified, so silent misconfiguration is visible before it matters."""
+    report = Report()
+    tdd_cfg = cfg.get("tdd", {})
+    test_globs = tdd_cfg.get("test_globs") or DEFAULT_TEST_GLOBS
+    source_globs = tdd_cfg.get("source_globs") or []
+    buckets: dict[str, list[str]] = {"test": [], "source": [], "other": []}
+    for path in git(root, "ls-files").splitlines():
+        buckets[classify(path, cfg)].append(path)
+    print(f"test_globs   = {test_globs}{' (default)' if not tdd_cfg.get('test_globs') else ''}")
+    print(f"source_globs = {source_globs or 'unset: any file with a known code extension counts as source'}")
+    ignored = [p for p in buckets["other"] if p.startswith(IGNORED_PREFIXES)]
+    buckets["other"] = [p for p in buckets["other"] if not p.startswith(IGNORED_PREFIXES)]
+    for kind in ("test", "source", "other"):
+        files = buckets[kind]
+        print(f"\n{kind} ({len(files)})")
+        for path in files[:20]:
+            print(f"  {path}")
+        if len(files) > 20:
+            print(f"  ... and {len(files) - 20} more")
+    print(f"\nnot considered: {len(ignored)} file(s) under docs/ and harness directories")
+    missed = [p for p in buckets["other"]
+              if Path(p).suffix in CODE_EXTENSIONS and not p.startswith(IGNORED_PREFIXES)]
+    if missed and source_globs:
+        report.warn(f"{len(missed)} file(s) with a code extension are classified 'other', so the test-first sensor "
+                    f"ignores them (e.g. {missed[0]}); widen tdd.source_globs in harness.toml")
+    return report

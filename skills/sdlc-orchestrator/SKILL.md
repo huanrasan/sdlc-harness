@@ -57,8 +57,19 @@ Periodic work: `sdlc-iteration-review` at the end of an iteration, `sdlc-maintai
 Advance with `python3 .harness/sdlc.pyz phase <id> <next>`. When the gate reports that an artifact
 requires approval, stop: tell the human which artifact, which roles may approve (`.harness/roster.toml`), and the
 command they run themselves: `python3 .harness/sdlc.pyz approve <id> <artifact> --as <username> --role <role>`,
-followed by an approving review on the pull request. Any later edit to that artifact invalidates the approval. The profile in `harness.toml` decides which
+followed by an approving review on the pull request (or, with `separation_of_duties = false`, a signed commit).
+Any later edit to that artifact invalidates the approval: the human re-approves after reading the diff with
+`python3 .harness/sdlc.pyz amend <id> <artifact> --as <username> --role <role>`. Never omit true information from
+an approved document to keep its receipt valid. The profile in `harness.toml` decides which
 artifacts are mandatory; artifacts that are not mandatory are still welcome when they reduce risk.
+
+Accepted risk that cannot be fixed now is recorded, not narrated: propose it with
+`sdlc deviation propose <policy> --reason "..." --days 90` (organization policy) or
+`sdlc exception propose <rule> <path> --reason "..."` (scanner findings). The entry is pending until a human with
+an authorized role approves it, and it expires on its own.
+
+Templates keep their English headings even when the content is written in another language: the gates read those
+headings. Write the prose in the team's language; leave `## Decision`, `## Guardrails` and the table columns alone.
 
 ## 4. Stop conditions
 

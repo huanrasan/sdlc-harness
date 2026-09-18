@@ -4,6 +4,10 @@
 [settings]
 platform = "github"            # github | gitlab
 separation_of_duties = true    # an approver cannot author the pull request or the approved artifact
+# Set it to false for a single maintainer, who cannot approve their own pull request on GitHub. The approval is then
+# proven by a commit signature the platform verifies instead of by a platform review, so `sdlc approvals verify`
+# requires that the commit adding the receipt is signed by the approver (`git config commit.gpgsign true`, with the
+# key or your SSH key registered as a signing key on the platform).
 
 [roles.product-owner]
 members = []

@@ -14,6 +14,11 @@ from .core import Report, cell, section, table_with
 AC_RE = re.compile(r"\bAC-\d+\b")
 THREAT_RE = re.compile(r"\bT-\d+\b")
 PASS_RESULTS = {"pass", "passed", "verified", "n/a"}
+OPEN_RESULTS = {"blocked", "pending"}
+GUARDRAIL_TOPICS = [("a budget", r"budget|presupuesto"),
+                    ("alert thresholds", r"alert|threshold|umbral|alarma"),
+                    ("allocation tags", r"\btags?\b|etiqueta|allocation|label"),
+                    ("an idle policy", r"idle|scale to zero|scale-to-zero|shut ?down|apag|inactiv")]
 EMPTY = {"", "-", "tbd", "todo", "?"}
 
 
@@ -126,9 +131,20 @@ def check_verification(text: str, rel: str, ctx: Context) -> Report:
             report.error(f"{rel}: {ac} from spec.md has no verification result")
             continue
         result = cell(r, "result").lower()
-        if result not in PASS_RESULTS:
-            report.error(f"{rel}: {ac} result is '{result or 'empty'}' (expected pass/verified/n/a)")
         evidence = cell(r, "evidence")
+        if result in OPEN_RESULTS:
+            # An honest open state: the record stays truthful, but the phase still cannot advance.
+            owner = re.search(r"owner:\s*([^\s,;|]+)(.*)", evidence, re.I)
+            if not owner or _blank(owner.group(2)):
+                report.error(f"{rel}: {ac} is '{result}' and must name an owner and a reason, e.g. "
+                             f"'blocked - owner: rita - needs repository admin to protect the branch'")
+            else:
+                report.error(f"{rel}: {ac} is {result} (owner: {owner.group(1)}); verify cannot close until it "
+                             f"passes, or record it as n/a with the reason")
+            continue
+        if result not in PASS_RESULTS:
+            report.error(f"{rel}: {ac} result is '{result or 'empty'}' "
+                         f"(expected pass/verified/n/a, or blocked/pending with an owner and a reason)")
         if _blank(evidence):
             report.error(f"{rel}: {ac} has no evidence")
         elif test_files is not None:
@@ -260,12 +276,17 @@ def check_cost(text: str, rel: str, ctx: Context) -> Report:
     for r in rows:
         if not re.search(r"\d", cell(r, "monthly")):
             report.error(f"{rel}: '{cell(r, 'component')}' has no numeric monthly cost")
-    if not re.search(r"^Total monthly \(production\):\s*\S*\d", text, re.M):
-        report.error(f"{rel}: 'Total monthly (production):' needs a number")
+    # The amount may carry a currency before or after it ("USD 77.40", "77,40 USD", "$77.40"): any digit will do.
+    if not re.search(r"^Total monthly \(production\):.*\d", text, re.M):
+        report.error(f"{rel}: 'Total monthly (production):' needs an amount "
+                     f"(e.g. 'Total monthly (production): USD 77.40')")
     _require_sections(text, rel, ["Assumptions"], report)
-    guardrails = section(text, "Guardrails")
-    if re.search(r":\s*$", guardrails, re.M) or "budget" not in guardrails.lower():
-        report.error(f"{rel}: guardrails need budget/alert thresholds, allocation tags and idle policy")
+    guardrails = section(text, "Guardrails").lower()
+    missing = [name for name, pattern in GUARDRAIL_TOPICS if not re.search(pattern, guardrails)]
+    if missing:
+        report.error(f"{rel}: Guardrails does not cover {', '.join(missing)} "
+                     f"(state a monthly budget, the alert thresholds, the cost allocation tags and what is "
+                     f"shut down or scaled to zero when idle)")
     return report
 
 

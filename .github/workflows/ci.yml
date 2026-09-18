@@ -18,6 +18,8 @@ jobs:
     steps:
       # Actions are pinned to commit SHAs (OpenSSF Scorecard: Pinned-Dependencies).
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ matrix.python }}
@@ -37,7 +39,10 @@ jobs:
             sdlc init "$dir" --profile "$profile" --agents claude-code,codex,copilot,cursor,gemini-cli,windsurf,opencode
             python "$dir/.harness/sdlc.pyz" --root "$dir" check
             sdlc --root "$dir" upgrade | tee "$RUNNER_TEMP/upgrade-$profile.txt"
-            ! grep -q "sdlc-new" "$RUNNER_TEMP/upgrade-$profile.txt"
+            # `! grep ...` would skip errexit, so this assertion could never fail (shellcheck SC2251).
+            if grep -q "sdlc-new" "$RUNNER_TEMP/upgrade-$profile.txt"; then
+              echo "upgrade rewrote template skills; it must be a no-op"; exit 1
+            fi
           done
       - name: Full single-file bundle can init without the package
         run: |
@@ -51,6 +56,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
@@ -62,8 +69,21 @@ jobs:
         working-directory: ${{ runner.temp }}/tpl
         run: |
           mkdir -p sdlc-evidence
-          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:latest \
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.176.1@sha256:34ab619bf1391a24bfda3f05debd0d8a6ce3093c2d5f9d39cfc00f83c1397823 \
             semgrep scan --config p/default --metrics off --sarif --output sdlc-evidence/sast.sarif
-          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest dir /repo --redact --exit-code 0 \
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f dir /repo --redact --exit-code 0 \
             --report-format sarif --report-path /repo/sdlc-evidence/secrets.sarif
           python3 .harness/sdlc.pyz evidence check --require sast,secrets
+      - name: Lint the installed workflows the way the template tells projects to
+        working-directory: ${{ runner.temp }}/tpl
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo \
+            rhysd/actionlint:1.7.9@sha256:a0383f60d92601e2694e24b24d37df7b6a40bed7cedbc447611c50009bf02d94 -color
+          pip install "zizmor==1.30.1"
+          zizmor --persona=regular --min-severity=medium .
+      - name: Lint this repository's own workflows
+        working-directory: ${{ github.workspace }}
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo \
+            rhysd/actionlint:1.7.9@sha256:a0383f60d92601e2694e24b24d37df7b6a40bed7cedbc447611c50009bf02d94 -color
+          zizmor --persona=regular --min-severity=medium .github/workflows

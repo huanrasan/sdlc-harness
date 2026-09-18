@@ -26,12 +26,15 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
       - name: Gates on the tagged commit
         run: python3 .harness/sdlc.pyz check
       - name: Build
+        # Contract: scripts/build-release is executable, takes no arguments, and leaves everything that will be
+        # published in dist/. Documented in harness.toml [release] and the sdlc-release skill.
         run: |
           if [ ! -x scripts/build-release ]; then
             echo "Create an executable scripts/build-release that writes release artifacts to dist/"; exit 1
@@ -39,9 +42,13 @@ jobs:
           scripts/build-release
           test -n "$(ls -A dist)"
       - name: SBOM (CycloneDX) and license policy
+        # The source comes from harness.toml [release] sbom_source: scanning dist/ as a directory when the artifact
+        # is an OCI archive produces an SBOM of the tarball, not of the image.
         run: |
           mkdir -p sdlc-evidence
-          docker run --rm -v "$PWD:/src" -w /src anchore/syft:latest dir:dist -o cyclonedx-json=sdlc-evidence/sbom.json
+          SBOM_SOURCE="$(python3 .harness/sdlc.pyz config release.sbom_source --default dir:dist)"
+          echo "SBOM source: $SBOM_SOURCE"
+          docker run --rm -v "$PWD:/src" -w /src anchore/syft:v1.52.0@sha256:500e2d872ac019436926e8322b4fc1f39441d94d21f6f4046c6ff29b30e8cb02 "$SBOM_SOURCE" -o cyclonedx-json=sdlc-evidence/sbom.json
           python3 .harness/sdlc.pyz evidence check --require sbom
           cp sdlc-evidence/sbom.json dist/sbom.cdx.json
       - name: Build provenance attestation (SLSA)

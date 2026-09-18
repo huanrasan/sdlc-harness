@@ -8,8 +8,9 @@ import sys
 from pathlib import Path
 
 from . import (adapters, architecture, audit, authority, changes, contracts, evidence, explain, installer, mcp,
-               memory, platform, policy, receipts, reports, skills, status, tdd)
-from .core import PHASES, PROFILES, RISKS, SCOPES, TYPES, VERSION, Report, git, load_config, paths
+               memory, platform, policy, proposals, receipts, reports, skills, status, tdd)
+from .core import (PHASES, PROFILES, RISKS, SCOPES, TYPES, VERSION, HarnessError, Report, git,
+                   load_config, paths)
 
 CONVENTIONAL_RE = re.compile(
     r"^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._/-]+\))?!?: .+"
@@ -40,7 +41,16 @@ def run_sensors(root: Path, cfg: dict, base: str | None) -> Report:
     return report
 
 
-def run_check(root: Path, only_change: str | None = None, base: str | None = None) -> Report:
+def staged_changes(root: Path, cfg: dict) -> list[str]:
+    """Change ids touched by the staged files, for a pre-commit hook that stays fast in a long-lived repository."""
+    prefix = paths(cfg)["changes"].rstrip("/") + "/"
+    names = git(root, "diff", "--cached", "--name-only", check=False).splitlines()
+    ids = {n[len(prefix):].split("/")[0] for n in names if n.startswith(prefix)}
+    return sorted(i for i in ids if (root / prefix / i / "change.toml").is_file())
+
+
+def run_check(root: Path, only_change: str | None = None, base: str | None = None,
+              only_changes: list[str] | None = None) -> Report:
     cfg = load_config(root)
     p = paths(cfg)
     report = Report()
@@ -53,9 +63,13 @@ def run_check(root: Path, only_change: str | None = None, base: str | None = Non
         report.extend(authority.check_roster(cfg, strict=False))
         report.extend(run_sensors(root, cfg, base))
         report.extend(policy.check(root, cfg))
+        report.extend(proposals.pending(root, cfg))
         report.extend(memory.check(root))
     base_dir = root / p["changes"]
-    if only_change:
+    if only_changes is not None:
+        for cid in only_changes:
+            report.extend(changes.check_change(root, changes.change_dir(root, cfg, cid), cfg))
+    elif only_change:
         report.extend(changes.check_change(root, changes.change_dir(root, cfg, only_change), cfg))
     elif base_dir.is_dir():
         for d in sorted(x for x in base_dir.iterdir() if x.is_dir()):
@@ -164,6 +178,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("check", help="validate skills, ADRs, adapters, roster and change gates")
     p.add_argument("--change", help="only validate this change id")
     p.add_argument("--base", help="git ref; also enforce append-only audit logs against it (CI)")
+    p.add_argument("--staged", action="store_true",
+                   help="only validate change records touched by the staged files (pre-commit hook)")
 
     p = sub.add_parser("new", help="start a change record")
     p.add_argument("type", choices=TYPES)
@@ -182,18 +198,41 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--as", dest="approver", required=True, help="your platform username")
     p.add_argument("--role", required=True)
 
+    p = sub.add_parser("amend", help="show what changed since an approval and re-approve in one step (human only)")
+    p.add_argument("change")
+    p.add_argument("artifact")
+    p.add_argument("--as", dest="approver", required=True, help="your platform username")
+    p.add_argument("--role", required=True)
+
     p = sub.add_parser("approvals", help="verify approval receipts against GitHub/GitLab (CI)")
     p.add_argument("action", choices=["verify"])
     p.add_argument("--platform", choices=["github", "gitlab"])
     p.add_argument("--base", required=True, help="base ref of the pull/merge request")
     p.add_argument("--pr", type=int, help="pull/merge request number (default: from CI environment)")
 
+    for kind, ident in (("deviation", "policy"), ("exception", "rule")):
+        p = sub.add_parser(kind, help=f"propose or approve a time-boxed {kind}")
+        p.add_argument("action", choices=["propose", "approve"])
+        p.add_argument(ident, help=f"{'policy key reported by `sdlc check`' if kind == 'deviation' else 'SARIF ruleId or license:<SPDX id>'}")
+        if kind == "exception":
+            p.add_argument("path", nargs="?", default="*", help="file glob or package purl (default: *)")
+        p.add_argument("--reason", help="propose: why the rule cannot be met now")
+        p.add_argument("--days", type=int, help="propose: lifetime in days (default 90)")
+        p.add_argument("--expires", help="propose: explicit expiry date (YYYY-MM-DD)")
+        p.add_argument("--as", dest="approver", help="approve: the approving human's username")
+        p.add_argument("--role", help="approve: their role")
+
+    p = sub.add_parser("config", help="print a configuration value (dotted key) for scripts and CI")
+    p.add_argument("key", help="e.g. release.sbom_source")
+    p.add_argument("--default", default="", help="printed when the key is not set")
+
     p = sub.add_parser("audit", help="verify audit log hash chains")
     p.add_argument("action", choices=["verify"])
     p.add_argument("--base", help="also enforce append-only against this git ref")
 
     p = sub.add_parser("tdd", help="test-first ordering and weakened tests over base..HEAD")
-    p.add_argument("--base", required=True)
+    p.add_argument("--base")
+    p.add_argument("--explain", action="store_true", help="show how each tracked file is classified and exit")
 
     sub.add_parser("arch", help="check layer dependencies from .harness/architecture.toml")
 
@@ -286,7 +325,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"wrote {args.output}")
             return 0
         case "check":
-            return run_check(root, args.change, args.base).print()
+            staged = staged_changes(root, load_config(root)) if args.staged else None
+            return run_check(root, args.change, args.base, staged).print()
         case "new":
             scopes = [x.strip() for x in args.scope.split(",") if x.strip()]
             return changes.new(root, args.type, args.slug, args.risk, args.ai_assisted, scopes)
@@ -297,11 +337,34 @@ def main(argv: list[str] | None = None) -> int:
             d = changes.change_dir(root, cfg, args.change)
             artifact = args.artifact if "/" in args.artifact else f"{d.relative_to(root).as_posix()}/{args.artifact}"
             return receipts.approve(root, cfg, d, artifact, args.approver, args.role)
+        case "amend":
+            cfg = load_config(root)
+            d = changes.change_dir(root, cfg, args.change)
+            artifact = args.artifact if "/" in args.artifact else f"{d.relative_to(root).as_posix()}/{args.artifact}"
+            return receipts.amend(root, cfg, d, artifact, args.approver, args.role)
         case "approvals":
             cfg = load_config(root)
             name = args.platform or authority.settings(cfg)["platform"]
             client = platform.client_from_env(root, name, args.pr)
             return platform.verify(root, client, args.base).print()
+        case "deviation" | "exception":
+            kind = args.command
+            fields = ({"policy": args.policy} if kind == "deviation" else {"rule": args.rule, "path": args.path})
+            if args.action == "propose":
+                return proposals.propose(root, kind, fields, args.reason or "", args.days, args.expires)
+            if not args.approver or not args.role:
+                raise HarnessError(f"{kind} approve needs --as <username> and --role <role>")
+            identity = tuple(str(v) for v in fields.values())
+            return proposals.approve(root, load_config(root), kind, identity, args.approver, args.role)
+        case "config":
+            value = load_config(root)
+            for part in args.key.split("."):
+                value = value.get(part) if isinstance(value, dict) else None
+                if value is None:
+                    break
+            print(args.default if value is None else
+                  (" ".join(str(v) for v in value) if isinstance(value, list) else value))
+            return 0
         case "audit":
             cfg = load_config(root)
             report = Report()
@@ -312,6 +375,10 @@ def main(argv: list[str] | None = None) -> int:
             return report.print()
         case "tdd":
             cfg = load_config(root)
+            if args.explain:
+                return tdd.explain(root, cfg).print()
+            if not args.base:
+                raise HarnessError("tdd needs --base (or --explain)")
             report = tdd.check_test_first(root, cfg, args.base).extend(tdd.check_weakened_tests(root, cfg, args.base))
             return report.print()
         case "arch":

@@ -64,6 +64,12 @@ flowchart LR
 Elegí el perfil: `lite` (individual, evidencia mínima), `standard` (equipos de producto, aprobaciones desde el inicio) o
 `regulated` (con obligaciones de auditoría, todos los artefactos aprobados). Se puede cambiar después en `harness.toml`.
 
+Dos consecuencias que conviene conocer antes de elegir. En `standard` todo cambio, incluido un `fix` de riesgo bajo,
+necesita un `spec.md` aprobado; si eso deja cada corrección trivial esperando una firma, `lite` es la opción honesta.
+Y si sos la única persona que mantiene el repositorio, poné `separation_of_duties = false` en `.harness/roster.toml`:
+GitHub no permite aprobar tu propio pull request, así que el arnés acepta entonces un recibo que llega en un commit
+cuya firma verifica la plataforma. Activá la firma de commits antes de empezar.
+
 ## 3. Instalar y configurar (unos diez minutos)
 
 ```bash
@@ -308,8 +314,12 @@ La compuerta siempre nombra el archivo y qué falta. Los mensajes más frecuente
 | `AC-2 from spec.md is missing in the traceability table` | criterio sin test planificado | agregá la fila en `plan.md` |
 | `AC-1 result is 'fail'` | la verificación reporta una falla | arreglá el código, no edites el resultado |
 | `requires approval by one of roles [...]` | falta la compuerta humana | una persona con ese rol ejecuta `sdlc approve` |
-| `approval by X is stale (content changed)` | el artefacto cambió después de aprobarse | aprobar de nuevo el contenido nuevo |
+| `approval by X is stale (content changed)` | el artefacto cambió después de aprobarse | quien aprobó ejecuta `sdlc amend <id> <artefacto>`, lee el diff y confirma |
 | `no current approval from 'X' on the pull/merge request` | hay recibo pero nadie aprobó en la plataforma | aprobar el pull request |
+| `must have a signature the platform verifies` | modo de un solo mantenedor sin firma de commits | firmar el commit que agrega el recibo, o volver a activar la separación de funciones |
+| `AC-9 is blocked (owner: rita)` | un criterio honestamente todavía no se puede verificar | terminarlo, o registrarlo como `n/a` con el motivo; hasta entonces verify no cierra |
+| `Guardrails does not cover alert thresholds` | a la sección de costo le falta uno de los cuatro controles | declarar presupuesto, umbrales, etiquetas de asignación y política de apagado |
+| `deviation 'X' is proposed and awaits approval` | una propuesta no tiene aprobador | un rol de arquitectura o seguridad ejecuta `sdlc deviation approve` |
 | `receipt was added after the approval` | orden invertido | commit del recibo, push y después aprobar el pull request |
 | `separation of duties - approver authored the change` | la misma persona escribió y aprobó | otro aprobador, o `separation_of_duties = false` |
 | `test-first: commit ... changes source before any test change` | código antes que los tests | reordenar commits o agregar el trailer `TDD-Waiver:` |
@@ -338,8 +348,14 @@ cadenas y aprobaciones de la plataforma, así que esas ediciones fallan de forma
 | `sdlc sync` | agente o persona | regenerar el índice de skills y los adaptadores |
 | `sdlc new <tipo> <slug> --risk <r> [--scope ...]` | agente | abrir un change record |
 | `sdlc phase <id> <fase>` | agente | avanzar cuando la compuerta pasa |
-| `sdlc check [--change <id>] [--base <ref>]` | ambos, CI | todas las compuertas; con `--base`, también los sensores de historia |
+| `sdlc check [--change <id>] [--staged] [--base <ref>]` | ambos, CI | todas las compuertas; `--staged` solo lo que toca el commit; con `--base`, también los sensores de historia |
 | `sdlc approve <id> <artefacto> --as <usuario> --role <rol>` | **solo personas** | recibo de aprobación |
+| `sdlc amend <id> <artefacto> --as <usuario> --role <rol>` | **solo personas** | muestra el diff desde la aprobación y reaprueba en un paso |
+| `sdlc deviation propose <política> --reason ... [--days N]` | agente | registra un riesgo aceptado frente a la política de la organización, pendiente de una persona |
+| `sdlc deviation approve <política> --as <usuario> --role <rol>` | **solo personas** | confirma esa desviación; sigue caducando |
+| `sdlc exception propose <regla> [<ruta>] --reason ...` | agente | lo mismo, para un hallazgo de un escáner |
+| `sdlc tdd --explain` | ambos | cómo queda clasificado cada archivo versionado (test / fuente / otro) |
+| `sdlc config <clave> [--default <v>]` | scripts, CI | lee un valor de `harness.toml` |
 | `sdlc approvals verify --base <ref>` | CI | confirmar aprobaciones contra la plataforma |
 | `sdlc evidence check` / `baseline` | CI / persona | política de escáneres; registrar hallazgos previos |
 | `sdlc tdd --base <ref>` | CI | test-first y tests debilitados |
