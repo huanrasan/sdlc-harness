@@ -62,7 +62,7 @@ platform (CODEOWNERS, branch protection, protected environments), not by a field
 ## 4. Projects and frameworks evaluated: what was used and how
 
 Every item below was studied from its own repository or publication. No code or text was copied; incompatible licences
-are cited only (see [ACKNOWLEDGEMENTS.md](../../ACKNOWLEDGEMENTS.md)).
+are cited only (see [ACKNOWLEDGEMENTS.md](https://github.com/huanrasan/sdlc-harness/blob/main/ACKNOWLEDGEMENTS.md)).
 
 | Source | Use in this harness |
 |---|---|
@@ -108,4 +108,4 @@ are cited only (see [ACKNOWLEDGEMENTS.md](../../ACKNOWLEDGEMENTS.md)).
 
 ## 7. Sources
 
-Full list with URLs in [ACKNOWLEDGEMENTS.md](../../ACKNOWLEDGEMENTS.md).
+Full list with URLs in [ACKNOWLEDGEMENTS.md](https://github.com/huanrasan/sdlc-harness/blob/main/ACKNOWLEDGEMENTS.md).

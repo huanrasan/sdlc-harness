@@ -1,0 +1,56 @@
+site_name: sdlc-harness
+site_description: Agent-agnostic harness for the software development lifecycle
+site_url: https://huanrasan.github.io/sdlc-harness/
+repo_url: https://github.com/huanrasan/sdlc-harness
+repo_name: huanrasan/sdlc-harness
+edit_uri: edit/main/docs/
+copyright: MIT licensed
+
+theme:
+  name: material
+  language: en
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle: {icon: material/weather-night, name: Dark mode}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle: {icon: material/weather-sunny, name: Light mode}
+  features: [navigation.tabs, navigation.sections, navigation.top, content.code.copy, search.highlight, toc.follow]
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+      # Keep GitHub-compatible anchors (accents preserved) so links work in the repository and on the site.
+      slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+# Files rendered but reachable from their index page instead of the navigation.
+not_in_nav: |
+  examples/**
+  adr/0*.md
+
+nav:
+  - Home: index.md
+  - English:
+      - Walkthrough: en/walkthrough.md
+      - Guide: en/guide.md
+      - Glossary: en/glossary.md
+      - Controls matrix: en/controls.md
+      - Research and rationale: en/research.md
+  - Español:
+      - Recorrido: es/recorrido.md
+      - Guía: es/guia.md
+      - Glosario: es/glosario.md
+      - Matriz de controles: es/controles.md
+      - Investigación y fundamentos: es/investigacion.md
+  - Example: examples/README.md
+  - Decisions: adr/README.md

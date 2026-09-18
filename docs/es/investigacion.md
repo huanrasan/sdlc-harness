@@ -69,7 +69,7 @@ pueda editar.
 ## 4. Proyectos y marcos evaluados: qué se usó y cómo
 
 Cada elemento de la lista se estudió en su repositorio o publicación original. No se copió código ni texto, y las
-fuentes con licencia incompatible solo se citan (ver [ACKNOWLEDGEMENTS.md](../../ACKNOWLEDGEMENTS.md)).
+fuentes con licencia incompatible solo se citan (ver [ACKNOWLEDGEMENTS.md](https://github.com/huanrasan/sdlc-harness/blob/main/ACKNOWLEDGEMENTS.md)).
 
 | Fuente | Uso en este arnés |
 |---|---|
@@ -119,4 +119,4 @@ fuentes con licencia incompatible solo se citan (ver [ACKNOWLEDGEMENTS.md](../..
 
 ## 7. Fuentes
 
-Lista completa con URLs en [ACKNOWLEDGEMENTS.md](../../ACKNOWLEDGEMENTS.md).
+Lista completa con URLs en [ACKNOWLEDGEMENTS.md](https://github.com/huanrasan/sdlc-harness/blob/main/ACKNOWLEDGEMENTS.md).

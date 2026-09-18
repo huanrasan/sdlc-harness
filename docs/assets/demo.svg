@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 767 311" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13.2">
+<style>
+.bg{fill:#0d1117}.chrome{fill:#161b22}.title{fill:#8b949e}
+.cmd{fill:#79c0ff}.out{fill:#c9d1d9}.ok{fill:#7ee787}.warn{fill:#d29922}.err{fill:#ff7b72}
+g.frame{opacity:0}
+g.f0{animation:f0 27.2s linear infinite}@keyframes f0{0%,0.000%{opacity:0}0.441%,12.059%{opacity:1}12.500%,100%{opacity:0}}
+g.f1{animation:f1 27.2s linear infinite}@keyframes f1{0%,12.500%{opacity:0}12.941%,24.559%{opacity:1}25.000%,100%{opacity:0}}
+g.f2{animation:f2 27.2s linear infinite}@keyframes f2{0%,25.000%{opacity:0}25.441%,37.059%{opacity:1}37.500%,100%{opacity:0}}
+g.f3{animation:f3 27.2s linear infinite}@keyframes f3{0%,37.500%{opacity:0}37.941%,49.559%{opacity:1}50.000%,100%{opacity:0}}
+g.f4{animation:f4 27.2s linear infinite}@keyframes f4{0%,50.000%{opacity:0}50.441%,62.059%{opacity:1}62.500%,100%{opacity:0}}
+g.f5{animation:f5 27.2s linear infinite}@keyframes f5{0%,62.500%{opacity:0}62.941%,74.559%{opacity:1}75.000%,100%{opacity:0}}
+g.f6{animation:f6 27.2s linear infinite}@keyframes f6{0%,75.000%{opacity:0}75.441%,87.059%{opacity:1}87.500%,100%{opacity:0}}
+g.f7{animation:f7 27.2s linear infinite}@keyframes f7{0%,87.500%{opacity:0}87.941%,99.559%{opacity:1}100.000%,100%{opacity:0}}
+</style>
+<rect class="bg" width="100%" height="100%" rx="10"/>
+<rect class="chrome" width="100%" height="30" rx="10"/>
+<circle cx="20" cy="15" r="5" fill="#ff5f56"/><circle cx="38" cy="15" r="5" fill="#ffbd2e"/><circle cx="56" cy="15" r="5" fill="#27c93f"/>
+<text class="title" x="76" y="19">sdlc-harness 0.6.0 - one change, gated</text>
+<g class="frame f0">
+<text class="cmd" x="18" y="67" xml:space="preserve">$ sdlc init . --profile standard --agents claude-code,codex</text>
+<text class="out" x="18" y="86" xml:space="preserve">updated AGENTS.md skills index</text>
+<text class="out" x="18" y="105" xml:space="preserve">[claude-code] created CLAUDE.md</text>
+<text class="out" x="18" y="124" xml:space="preserve">[claude-code] linked .claude/skills -&gt; ../.agents/skills</text>
+</g>
+<g class="frame f1">
+<text class="cmd" x="18" y="67" xml:space="preserve">$ sdlc new feature booking-reminders --risk medium --scope ui</text>
+<text class="out" x="18" y="86" xml:space="preserve">created docs/changes/2026-09-18-booking-reminders: change.toml discovery.md spec.md design.m</text>
+</g>
+<g class="frame f2">
+<text class="cmd" x="18" y="67" xml:space="preserve">$ sdlc status</text>
+<text class="out" x="18" y="86" xml:space="preserve">profile: standard</text>
+<text class="out" x="18" y="105" xml:space="preserve"></text>
+<text class="out" x="18" y="124" xml:space="preserve">2026-09-18-booking-reminders  [feature risk=medium scopes=ui]  phase: discover -&gt; spec</text>
+<text class="err" x="18" y="143" xml:space="preserve">  - blocks spec: docs/changes/2026-09-18-booking-reminders/discovery.md: unfilled sections (</text>
+<text class="out" x="18" y="162" xml:space="preserve">  next: fix the evidence listed above, then: python3 .harness/sdlc.pyz phase 2026-09-18-book</text>
+</g>
+<g class="frame f3">
+<text class="cmd" x="18" y="67" xml:space="preserve">$ sdlc phase &lt;id&gt; spec   # the agent filled discovery.md</text>
+<text class="out" x="18" y="86" xml:space="preserve">gate blocked: 2026-09-18-booking-reminders stays in &#x27;discover&#x27;. Run `python3 .harness/sdlc.p</text>
+<text class="err" x="18" y="105" xml:space="preserve">ERROR docs/changes/2026-09-18-booking-reminders/discovery.md: requires approval by one of ro</text>
+<text class="err" x="18" y="124" xml:space="preserve">FAIL: 1 error(s), 0 warning(s)</text>
+</g>
+<g class="frame f4">
+<text class="cmd" x="18" y="67" xml:space="preserve">$ sdlc approve &lt;id&gt; discovery.md --as pat --role product-owner   # a human, never the agent</text>
+<text class="ok" x="18" y="86" xml:space="preserve">receipt recorded: docs/changes/2026-09-18-booking-reminders/discovery.md sha256=ae6b3a077a91</text>
+<text class="out" x="18" y="105" xml:space="preserve">Commit approvals.toml and audit.jsonl, then approve the pull request on the platform.</text>
+</g>
+<g class="frame f5">
+<text class="cmd" x="18" y="67" xml:space="preserve">$ sdlc phase &lt;id&gt; spec</text>
+<text class="out" x="18" y="86" xml:space="preserve">2026-09-18-booking-reminders: discover -&gt; spec</text>
+<text class="ok" x="18" y="105" xml:space="preserve">OK: 0 error(s), 0 warning(s)</text>
+</g>
+<g class="frame f6">
+<text class="cmd" x="18" y="67" xml:space="preserve">$ sdlc check   # an approved artifact was edited afterwards</text>
+<text class="err" x="18" y="86" xml:space="preserve">ERROR docs/changes/2026-09-18-booking-reminders/discovery.md: approval by pat is stale (cont</text>
+<text class="err" x="18" y="105" xml:space="preserve">FAIL: 1 error(s), 0 warning(s)</text>
+</g>
+<g class="frame f7">
+<text class="cmd" x="18" y="67" xml:space="preserve">$ sdlc explain &quot;approval by pat is stale (content changed); re-approve&quot;</text>
+<text class="out" x="18" y="86" xml:space="preserve">message: approval by pat is stale (content changed); re-approve</text>
+<text class="out" x="18" y="105" xml:space="preserve">  cause: The artifact changed after it was approved, so the receipt no longer matches.</text>
+<text class="out" x="18" y="124" xml:space="preserve">  fix: Approve the new content again; the SHA-256 in the receipt must match the file.</text>
+</g>
+</svg>

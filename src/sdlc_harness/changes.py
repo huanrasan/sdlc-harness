@@ -61,6 +61,12 @@ def check_change(root: Path, change_dir: Path, cfg: dict) -> Report:
     change = load_change(change_dir, report)
     if change is None:
         return report
+    return report.extend(check_against(root, change_dir, cfg, change))
+
+
+def check_against(root: Path, change_dir: Path, cfg: dict, change: dict) -> Report:
+    """Gate results for `change` as described by the given metadata (used with a hypothetical phase by `status`)."""
+    report = Report()
     rel = change_dir.relative_to(root).as_posix()
     ctx = gates.Context(root, change_dir, cfg, change)
     for rule in required_rules(change, cfg["_profile"].get("rules", [])):
@@ -164,7 +170,8 @@ def phase(root: Path, change_id: str, target: str) -> int:
     if report.errors:
         meta.write_text(text, encoding="utf-8")
         audit.append(root, d, "phase_blocked", **{"from": current, "to": target, "errors": len(report.errors)})
-        print(f"gate blocked: {change_id} stays in '{current}'")
+        print(f"gate blocked: {change_id} stays in '{current}'. "
+              f"Run `python3 .harness/sdlc.pyz status --change {change_id}` for what is missing and who approves.")
     else:
         audit.append(root, d, "phase", **{"from": current, "to": target})
         print(f"{change_id}: {current} -> {target}")

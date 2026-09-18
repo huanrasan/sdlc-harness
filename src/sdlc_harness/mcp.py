@@ -11,8 +11,8 @@ import json
 import sys
 from pathlib import Path
 
-from . import changes, memory, reports
-from .core import VERSION, load_config, paths
+from . import changes, explain, memory, reports, status
+from .core import VERSION, load_config
 
 PROTOCOL_VERSION = "2025-06-18"
 
@@ -31,8 +31,12 @@ TOOLS = [
          "source": {"type": "string", "description": "change id, PR or incident reference"}},
          "required": ["type", "title", "body"]}},
     {"name": "change_status",
-     "description": "List change records with phase, or show gate results for one change.",
+     "description": "Where each change stands: phase, missing evidence, pending approvals with the roles that can "
+                    "grant them, and the exact next command.",
      "inputSchema": {"type": "object", "properties": {"change": {"type": "string"}}}},
+    {"name": "explain",
+     "description": "Explain a phase, artifact, role, scope, harness concept, or a gate message you just received.",
+     "inputSchema": {"type": "object", "properties": {"topic": {"type": "string"}}, "required": ["topic"]}},
     {"name": "check",
      "description": "Run harness gates (optionally for one change, or with a base ref for history sensors).",
      "inputSchema": {"type": "object", "properties": {"change": {"type": "string"}, "base": {"type": "string"}}}},
@@ -60,13 +64,9 @@ def _call(root: Path, name: str, args: dict) -> tuple[str, bool]:
                 print(f"created {path.relative_to(root)} (commit it for review)")
             elif name == "change_status":
                 cfg = load_config(root)
-                if args.get("change"):
-                    is_error = run_check(root, args["change"]).print() != 0
-                else:
-                    base = root / paths(cfg)["changes"]
-                    for d in sorted(p for p in base.iterdir() if (p / "change.toml").exists()) if base.is_dir() else []:
-                        meta = changes.load_toml(d / "change.toml")
-                        print(f"{meta.get('id')}: {meta.get('type')} risk={meta.get('risk')} phase={meta.get('phase')}")
+                is_error = status.run(root, cfg, args.get("change"), "text") != 0
+            elif name == "explain":
+                is_error = explain.explain(args["topic"], load_config(root), root) != 0
             elif name == "check":
                 is_error = run_check(root, args.get("change"), args.get("base")).print() != 0
             elif name == "trace":

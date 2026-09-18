@@ -1,7 +1,8 @@
 # Recorrido paso a paso
 
 > English version: [../en/walkthrough.md](../en/walkthrough.md)
-> Documentación de referencia: [guía](guia.md) · [matriz de controles](controles.md) · [decisiones](../adr/README.md)
+> Referencia: [guía](guia.md) · [glosario](glosario.md) · [matriz de controles](controles.md) · [decisiones](../adr/README.md)
+> Un change record terminado, producido con el arnés: [ejemplo](../examples/README.md)
 
 Esta página sigue un cambio desde la idea hasta producción, con los comandos, quién ejecuta cada uno y qué hacer cuando
 una compuerta bloquea. El ejemplo que usamos es una app web de reservas para negocios que trabajan con citas.
@@ -66,7 +67,7 @@ Elegí el perfil: `lite` (individual, evidencia mínima), `standard` (equipos de
 ## 3. Instalar y configurar (unos diez minutos)
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.3
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.6.0
 sdlc init ruta/a/tu-repo --profile standard --agents claude-code,codex,gemini-cli
 cd ruta/a/tu-repo
 ```
@@ -329,7 +330,9 @@ cadenas y aprobaciones de la plataforma, así que esas ediciones fallan de forma
 
 | Comando | Quién | Para qué |
 |---|---|---|
-| `sdlc init <dir> [--adopt]` | persona | instalar; `--adopt` para un repo existente |
+| `sdlc init <dir> [--interactive] [--adopt]` | persona | instalar; `--interactive` hace las preguntas, `--adopt` lee un repo existente |
+| `sdlc status [--change <id>]` | ambos | en qué está el cambio, qué lo bloquea, quién aprueba y el comando siguiente |
+| `sdlc explain <tema\|mensaje>` | ambos | fase, artefacto, rol, scope, concepto o el significado de un mensaje de compuerta |
 | `sdlc upgrade [--dry-run]` | persona | pasar a una versión nueva conservando personalizaciones |
 | `sdlc doctor` | persona | revisión de configuración y controles |
 | `sdlc sync` | agente o persona | regenerar el índice de skills y los adaptadores |

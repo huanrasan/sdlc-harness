@@ -154,7 +154,7 @@ class McpTests(HarnessCase):
         self.assertEqual(len(responses), 6)
         self.assertEqual(responses[0]["result"]["serverInfo"]["name"], "sdlc-harness")
         names = {t["name"] for t in responses[1]["result"]["tools"]}
-        self.assertEqual(names, {"memory_search", "memory_add", "change_status", "check", "trace"})
+        self.assertEqual(names, {"memory_search", "memory_add", "change_status", "check", "trace", "explain"})
         self.assertNotIn("approve", " ".join(names))
         self.assertIn("created docs/memory/", responses[2]["result"]["content"][0]["text"])
         self.assertIn("Use expand contract migrations", responses[3]["result"]["content"][0]["text"])

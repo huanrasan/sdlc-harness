@@ -7,7 +7,7 @@ Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf, OpenCode...) the same guide
 gates, from specification to operation, with controls that scale from a solo developer to a regulated organization.
 Stack- and cloud-agnostic: public cloud, private cloud, on-prem or air-gapped.
 
-**Status:** v0.5.3, early preview.
+**Status:** v0.6.0, early preview.
 
 ## Why
 
@@ -30,7 +30,8 @@ standards so a team can switch or mix agents without rebuilding its process.
   CycloneDX SBOM (severity threshold, license deny list, expiring exceptions).
 - **Organization policy and memory**: vendored mandatory policy with expiring deviations, reviewed memory entries,
   and an MCP server with read-mostly tools for any agent.
-- **Visibility**: traceability, delivery flow and DORA-style reports as Markdown, JSON or HTML.
+- **Visibility**: traceability, delivery flow and DORA-style reports as Markdown, JSON or HTML; `sdlc status` says
+  what is missing and who must approve, `sdlc explain` documents any phase, artifact, role or gate message.
 - **Distribution and upgrades**: pipx or a single offline file, Claude Code plugin marketplace, Gemini CLI
   extension, `npx skills add`; brownfield adoption with stack detection; 3-way `sdlc upgrade` that keeps customizations.
 - **Behavioural evals** that measure whether each agent actually follows the harness.
@@ -38,6 +39,8 @@ standards so a team can switch or mix agents without rebuilding its process.
 - **Profiles** `lite`, `standard` and `regulated` that require artifacts by change type and risk.
 - **Adapters** generated for agents that do not read `.agents/skills` natively.
 - **Controls matrix** mapped to NIST SSDF, SLSA, OWASP Agentic Top 10, DORA and AI governance frameworks.
+
+![One change through the harness: status shows the blocker, a human approves, editing the artifact invalidates the approval](docs/assets/demo.svg)
 
 ## How it works
 
@@ -60,8 +63,8 @@ evidence, and the next phase does not start until the gate passes and the requir
 ## Quick start
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.3
-sdlc init ../my-service --profile standard      # add --adopt for an existing repository
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.6.0
+sdlc init ../my-service --interactive           # guided setup; add --adopt for an existing repository
 cd ../my-service
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor
 python3 .harness/sdlc.pyz new feature payment-retries --risk medium
@@ -73,6 +76,9 @@ Then ask your agent to work on the change; `AGENTS.md` routes it to the `sdlc-or
 
 | | English | Español |
 |---|---|---|
+| Documentation site | [huanrasan.github.io/sdlc-harness](https://huanrasan.github.io/sdlc-harness/) | idem |
+| Complete example change | [docs/examples/](docs/examples/README.md) | idem |
+| Glossary | [docs/en/glossary.md](docs/en/glossary.md) | [docs/es/glosario.md](docs/es/glosario.md) |
 | Step-by-step walkthrough | [docs/en/walkthrough.md](docs/en/walkthrough.md) | [docs/es/recorrido.md](docs/es/recorrido.md) |
 | User guide (reference) | [docs/en/guide.md](docs/en/guide.md) | [docs/es/guia.md](docs/es/guia.md) |
 | Research and design rationale | [docs/en/research.md](docs/en/research.md) | [docs/es/investigacion.md](docs/es/investigacion.md) |

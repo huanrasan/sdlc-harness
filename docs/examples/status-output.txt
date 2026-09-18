@@ -1,0 +1,8 @@
+profile: standard
+
+2026-09-17-staff-csv-export  [feature risk=medium scopes=ui,api]  phase: done (done)
+  = approved: docs/changes/2026-09-17-staff-csv-export/discovery.md by pat as product-owner
+  = approved: docs/changes/2026-09-17-staff-csv-export/spec.md by pat as product-owner
+  = approved: docs/changes/2026-09-17-staff-csv-export/design.md by tomas as tech-lead
+  = approved: docs/changes/2026-09-17-staff-csv-export/release.md by rita as release-manager
+  next: nothing: the change is done

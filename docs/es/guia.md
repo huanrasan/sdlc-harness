@@ -15,7 +15,7 @@ Elige cómo obtener la CLI (Python ≥ 3.11, sin otras dependencias):
 
 | Canal | Comando |
 |---|---|
-| pipx (recomendado) | `pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.3` y luego `sdlc ...` |
+| pipx (recomendado) | `pipx install git+https://github.com/huanrasan/sdlc-harness@v0.6.0` y luego `sdlc ...` |
 | Archivo único, sin red | descarga `sdlc-full.pyz` del release y ejecuta `python3 sdlc-full.pyz ...` |
 | Desde el código fuente | `git clone ...` y luego `PYTHONPATH=src python3 -m sdlc_harness ...` |
 
@@ -95,6 +95,8 @@ Pídele el trabajo a tu agente como siempre. `AGENTS.md` lo dirige a la skill `s
 python3 .harness/sdlc.pyz new feature payment-retries --risk high   # crea docs/changes/<fecha>-payment-retries/
 python3 .harness/sdlc.pyz phase <id> design                          # bloqueado hasta que spec.md esté completo y aprobado
 python3 .harness/sdlc.pyz check                                      # la misma compuerta que corre en CI
+python3 .harness/sdlc.pyz status                                     # qué bloquea, quién aprueba y qué sigue
+python3 .harness/sdlc.pyz explain "<mensaje de compuerta>"           # por qué bloqueó y cómo se resuelve
 ```
 
 Los artefactos obligatorios por perfil, tipo y riesgo se definen en `.harness/profiles/<perfil>.toml`. Una regla
