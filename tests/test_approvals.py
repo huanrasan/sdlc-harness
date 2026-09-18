@@ -7,9 +7,13 @@ from sdlc_harness import platform
 
 
 class FakeClient:
-    def __init__(self, approvals, pr_author="dev", authors=None, teams=None):
+    def __init__(self, approvals, pr_author="dev", authors=None, teams=None, signatures=None):
         self._approvals, self._author = approvals, pr_author
         self._authors, self._teams = authors or {}, teams or {}
+        self._signatures = signatures or {}
+
+    def signature(self, sha):
+        return self._signatures.get(sha, (False, ""))
 
     def approvals(self):
         return self._approvals
@@ -97,6 +101,57 @@ class ReceiptTests(HarnessCase):
         self.assertEqual(self.cli("codeowners", "--check")[0], 0)
         self.set_roster(security=["sam"])
         self.assertEqual(self.cli("codeowners", "--check")[0], 1)
+
+
+class SingleMaintainerTests(HarnessCase):
+    """With separation_of_duties = false a verified commit signature replaces the platform review.
+
+    GitHub forbids approving your own pull request, so the documented single-maintainer mode was unreachable
+    (field feedback, v0.6): every pull request adding a receipt failed. The receipt alone would be a file the
+    author wrote, so the binding to a checked identity moves to the commit signature.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.set_roster(product_owner=["solo"])
+        roster = self.repo / ".harness/roster.toml"
+        roster.write_text(roster.read_text().replace("separation_of_duties = true", "separation_of_duties = false"))
+        sh(self.repo, "git", "add", "-A")
+        sh(self.repo, "git", "commit", "-qm", "chore: base", "--no-verify")
+        sh(self.repo, "git", "checkout", "-qb", "feature")
+        self.cid = self.new_change(risk="low")
+        self.write_valid("spec.md")
+        sh(self.repo, "git", "add", "-A")
+        sh(self.repo, "git", "commit", "-qm", "docs: spec", "--no-verify")
+        self.cli("approve", self.cid, "spec.md", "--as", "solo", "--role", "product-owner")
+        sh(self.repo, "git", "add", "-A")
+        sh(self.repo, "git", "commit", "-qm", "docs: approve spec", "--no-verify")
+        self.head = sh(self.repo, "git", "rev-parse", "HEAD")
+
+    def verify(self, client):
+        return platform.verify(self.repo, client, "main")
+
+    def test_signed_receipt_is_accepted_without_a_platform_review(self):
+        report = self.verify(FakeClient({}, signatures={self.head: (True, "solo")}))
+        self.assertEqual(report.errors, [])
+
+    def test_unsigned_receipt_is_rejected(self):
+        report = self.verify(FakeClient({}))
+        self.assertIn("must have a signature the platform verifies", report.errors[0])
+
+    def test_a_signature_from_someone_else_is_rejected(self):
+        report = self.verify(FakeClient({}, signatures={self.head: (True, "mallory")}))
+        self.assertIn("is signed by 'mallory'", report.errors[0])
+
+    def test_a_platform_review_still_works_when_there_is_one(self):
+        report = self.verify(FakeClient({"solo": self.head}))
+        self.assertEqual(report.errors, [])
+
+    def test_separation_of_duties_still_requires_a_review(self):
+        roster = self.repo / ".harness/roster.toml"
+        roster.write_text(roster.read_text().replace("separation_of_duties = false", "separation_of_duties = true"))
+        report = self.verify(FakeClient({}, signatures={self.head: (True, "solo")}))
+        self.assertIn("no current approval", report.errors[0])
 
 
 class PlatformVerifyTests(HarnessCase):

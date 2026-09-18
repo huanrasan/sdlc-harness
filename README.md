@@ -7,7 +7,7 @@ Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf, OpenCode...) the same guide
 gates, from specification to operation, with controls that scale from a solo developer to a regulated organization.
 Stack- and cloud-agnostic: public cloud, private cloud, on-prem or air-gapped.
 
-**Status:** v0.6.0, early preview.
+**Status:** v0.7.0, early preview.
 
 ## Why
 
@@ -24,7 +24,10 @@ standards so a team can switch or mix agents without rebuilding its process.
 - **Phase gates** that check consistency (criteria traced to tests, threats to controls), run by a zero-dependency
   CLI vendored into each repository, identical in git hooks and CI (GitHub Actions and GitLab).
 - **Human approvals bound to content**: SHA-256 receipts per artifact, roles and authority matrix, CODEOWNERS
-  generation, separation of duties, platform-verified in CI, and a hash-chained audit log.
+  generation, separation of duties, platform-verified in CI, and a hash-chained audit log. A single maintainer, who
+  cannot approve their own pull request, proves the approval with a verified commit signature instead. `sdlc amend`
+  shows the approver what changed since their approval, so nobody has to choose between a valid receipt and a
+  truthful document.
 - **Deterministic sensors**: test-first ordering and weakened-test detection from git history, executable layer
   rules citing ADRs, OpenAPI/AsyncAPI breaking-change detection, and a single policy over any SARIF scanner and
   CycloneDX SBOM (severity threshold, license deny list, expiring exceptions).
@@ -63,7 +66,7 @@ evidence, and the next phase does not start until the gate passes and the requir
 ## Quick start
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.6.0
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.0
 sdlc init ../my-service --interactive           # guided setup; add --adopt for an existing repository
 cd ../my-service
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor

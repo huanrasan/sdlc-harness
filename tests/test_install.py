@@ -112,6 +112,23 @@ class WorkflowHygieneTests(unittest.TestCase):
             for update in yamlish.loads(f.read_text())["updates"]:
                 self.assertGreaterEqual(update.get("cooldown", {}).get("default-days", 0), 1, f.name)
 
+    def test_container_images_are_pinned_by_digest(self):
+        """A `:latest` scanner image silently changes what the gate enforces (field feedback, v0.6)."""
+        import re
+        for f in self.workflows():
+            for line in f.read_text().splitlines():
+                for image in re.findall(r"(?:docker run[^\n]*?|^\s+)((?:[\w.-]+/)+[\w.-]+:[\w.-]+)", line):
+                    self.assertIn("@sha256:", line, f"{f.name}: {image} is not pinned by digest")
+
+    def test_checkout_does_not_persist_credentials(self):
+        """zizmor 'artipacked': the token stays in .git/config for every later step otherwise."""
+        from sdlc_harness import yamlish
+        for f in self.workflows():
+            for job in (yamlish.loads(f.read_text()).get("jobs") or {}).values():
+                for step in job.get("steps", []):
+                    if "actions/checkout@" in step.get("uses", ""):
+                        self.assertIs(step.get("with", {}).get("persist-credentials"), False, f.name)
+
     def test_no_github_context_interpolated_in_run_steps(self):
         from sdlc_harness import yamlish
         for f in self.workflows():

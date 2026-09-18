@@ -5,6 +5,7 @@ Topics are matched loosely, so pasting a gate message works: `sdlc explain "appr
 from __future__ import annotations
 
 import re
+import textwrap
 from pathlib import Path
 
 from . import authority
@@ -72,13 +73,35 @@ ERROR_DOC = [
      f"A person holding that role runs: python3 {VENDORED_CLI} approve <id> <artifact> --as <user> --role <role>"),
     (r"is stale \(content changed\)|approval was given on different content",
      "The artifact changed after it was approved, so the receipt no longer matches.",
-     "Approve the new content again; the SHA-256 in the receipt must match the file."),
+     f"The approver reads the delta and confirms it in one step: python3 {VENDORED_CLI} amend <id> <artifact> "
+     f"--as <user> --role <role>. Never drop true information from a document to protect its receipt."),
     (r"no current approval from", "There is a receipt in the repository but nobody approved on the platform.",
      "Approve the pull request with the same account named in the receipt."),
     (r"receipt was added after the approval", "The receipt was committed after the platform review.",
      "Commit and push the receipt first, then submit the approving review."),
     (r"separation of duties", "The approver also authored the change.",
      "Have another role holder approve, or set separation_of_duties = false in .harness/roster.toml for solo work."),
+    (r"must have a signature the platform verifies",
+     "With separation_of_duties = false the receipt stands in for a platform review, so it must arrive in a signed "
+     "commit: otherwise it is only a file the author wrote.",
+     "Enable commit signing (git config commit.gpgsign true; register the key or your SSH signing key on the "
+     "platform), then amend the commit that adds approvals.toml."),
+    (r"is '(blocked|pending)'|is (blocked|pending) \(owner",
+     "A criterion is honestly not verified yet. The record is valid, but verify does not close.",
+     "Finish the check and record the real result, or record it as n/a with the reason if it no longer applies."),
+    (r"must name an owner and a reason",
+     "A blocked or pending criterion without an owner is an excuse, not a record.",
+     "Write it as: blocked - owner: <person> - <what has to happen>."),
+    (r"is proposed and awaits approval",
+     "A deviation or exception was proposed but nobody has approved it.",
+     f"A role holder confirms it: python3 {VENDORED_CLI} <deviation|exception> approve <key> --as <user> "
+     f"--role <role>. Until then it does not suppress anything."),
+    (r"Guardrails does not cover",
+     "The cost guardrails section does not state all four controls.",
+     "Give the monthly budget, the alert thresholds, the cost allocation tags and what is shut down when idle."),
+    (r"needs an amount",
+     "The production total has no number on that line.",
+     "Write it with the currency before or after: 'Total monthly (production): USD 77.40'."),
     (r"test-first", "A behaviour commit changed source before any test change in this range.",
      "Reorder commits so the test comes first, or add a human-written 'TDD-Waiver: <reason>' trailer."),
     (r"weakened test", "A test was skipped, focused or deleted.",
@@ -153,10 +176,15 @@ def _role_text(role: str, cfg: dict | None) -> str:
     return "\n".join(lines)
 
 
+def _wrap(label: str, text: str) -> str:
+    """Wrapped so long explanations stay readable in a narrow terminal and in the recorded demo."""
+    return textwrap.fill(text, width=96, initial_indent=f"  {label}: ", subsequent_indent=" " * (len(label) + 4))
+
+
 def _error_text(query: str) -> str | None:
     for pattern, cause, fix in ERROR_DOC:
         if re.search(pattern, query, re.I):
-            return f"message: {query.strip()}\n  cause: {cause}\n  fix: {fix}"
+            return "\n".join([f"message: {query.strip()}", _wrap("cause", cause), _wrap("fix", fix)])
     return None
 
 
@@ -191,9 +219,15 @@ CONCEPT_DOC = {
                 "artifacts in the change record.",
     "memory": "Curated Markdown entries in docs/memory/ (decisions, lessons, conventions, pitfalls) that agents search "
               "before starting work. Organization memory arrives with `sdlc org pull`.",
-    "deviation": "A time-boxed, approved exception to a mandatory organization policy, in .harness/deviations.toml.",
+    "deviation": "A time-boxed, approved exception to a mandatory organization policy, in .harness/deviations.toml. "
+                 "An agent may write the proposal (`sdlc deviation propose`), only a human approves it.",
     "exception": "A time-boxed, security-approved exception to a scanner finding or denied licence, in "
-                 ".harness/exceptions.toml.",
+                 ".harness/exceptions.toml. Proposed with `sdlc exception propose`, approved by a human.",
+    "amend": "Re-approving an artifact after reading the diff since the last approval (`sdlc amend`). It exists so "
+             "that keeping a receipt valid is never a reason to leave true information out of a document.",
+    "separation-of-duties": "The approver may not be the author. With one maintainer it is turned off in "
+                            ".harness/roster.toml, and the platform review is replaced by a verified commit "
+                            "signature: the receipt still binds to an identity the platform checked.",
 }
 
 

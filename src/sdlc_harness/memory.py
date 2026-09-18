@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+import unicodedata
 from pathlib import Path
 
 from .core import HarnessError, Report, parse_frontmatter
@@ -46,6 +47,17 @@ def load(root: Path) -> list[dict]:
     return org + project
 
 
+def _slug(title: str, limit: int = 60) -> str:
+    """ASCII, lowercase, cut on a word boundary: file names travel through tools that mangle accents."""
+    folded = unicodedata.normalize("NFKD", title.lower()).encode("ascii", "ignore").decode()
+    words, slug = WORD_RE.findall(folded), ""
+    for word in words:
+        if slug and len(slug) + 1 + len(word) > limit:
+            break
+        slug = f"{slug}-{word}" if slug else word
+    return slug[:limit].strip("-") or "entry"  # a lone word longer than the limit is cut rather than dropped
+
+
 def add(root: Path, entry_type: str, title: str, tags: list[str], body: str, source: str = "",
         review_days: int = 180) -> Path:
     if entry_type not in TYPES:
@@ -56,7 +68,7 @@ def add(root: Path, entry_type: str, title: str, tags: list[str], body: str, sou
         if pattern.search(title + "\n" + body):
             raise HarnessError("memory entry looks like it contains a secret; remove it")
     today = dt.date.today()
-    slug = "-".join(WORD_RE.findall(title.lower()))[:60].strip("-") or "entry"
+    slug = _slug(title)
     directory = root / MEMORY_DIR
     directory.mkdir(parents=True, exist_ok=True)
     entry_id, n = f"MEM-{today.isoformat()}-{slug}", 2

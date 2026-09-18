@@ -7,11 +7,15 @@ the VCS platform that the named person really approved that content (see platfor
 from __future__ import annotations
 
 import datetime as dt
+import difflib
+import hashlib
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 from . import audit, authority
-from .core import PLACEHOLDER, HarnessError, Report, load_toml, sha256_file
+from .core import PLACEHOLDER, VENDORED_CLI, HarnessError, Report, git, load_toml, sha256_file
 
 APPROVALS_FILE = "approvals.toml"
 
@@ -64,6 +68,51 @@ def approve(root: Path, cfg: dict, change_dir: Path, artifact: str, approver: st
     return 0
 
 
+def approved_content(root: Path, artifact: str, digest: str) -> str | None:
+    """The file content that was approved, recovered from git history by its hash."""
+    commits = git(root, "log", "--format=%H", "--", artifact, check=False).split()
+    for commit in commits:
+        blob = subprocess.run(["git", "show", f"{commit}:{artifact}"], cwd=root, capture_output=True)
+        if blob.returncode == 0 and hashlib.sha256(blob.stdout.replace(b"\r\n", b"\n")).hexdigest() == digest:
+            return blob.stdout.decode("utf-8", "replace")
+    return None
+
+
+def amend(root: Path, cfg: dict, change_dir: Path, artifact: str, approver: str, role: str) -> int:
+    """Show what changed since the approval and let the approver confirm it in one step.
+
+    Re-approving blind is what pushes people to leave true information out of an approved document (release digests,
+    a new variable) just to keep the receipt valid. This keeps the receipt honest by making the delta visible.
+    """
+    path = root / artifact
+    if not path.is_file():
+        raise HarnessError(f"artifact not found: {artifact}")
+    previous = [e for e in load(change_dir) if e["artifact"] == artifact and e["approver"] == approver]
+    if not previous:
+        raise HarnessError(f"no receipt by '{approver}' for {artifact}; use `sdlc approve` for a first approval")
+    stale = previous[-1]
+    if stale["sha256"] == sha256_file(path):
+        print(f"{artifact} is unchanged since the approval by {approver}; nothing to amend")
+        return 0
+    before = approved_content(root, artifact, stale["sha256"])
+    if before is None:
+        raise HarnessError(f"the approved content of {artifact} is not in git history (was it committed?); "
+                           f"review the file and use `sdlc approve` instead")
+    diff = list(difflib.unified_diff(before.splitlines(True), path.read_text(encoding="utf-8").splitlines(True),
+                                     fromfile=f"{artifact} (approved {stale['approved_at']})",
+                                     tofile=f"{artifact} (now)"))
+    print("".join(diff) or "(no textual difference; only line endings changed)")
+    print(f"\n{len(diff)} diff line(s). Approving again as {approver} / {role}.")
+    if not sys.stdin.isatty():
+        raise HarnessError("amend must be run by a human at a terminal; an agent cannot confirm an approval")
+    if input("Type 'yes' to confirm you have read this diff: ").strip().lower() != "yes":
+        print("not amended")
+        return 1
+    audit.append(root, change_dir, "amend-reviewed", artifact=artifact, previous_sha256=stale["sha256"],
+                 approver=approver, role=role)
+    return approve(root, cfg, change_dir, artifact, approver, role)
+
+
 def check(root: Path, cfg: dict, change_dir: Path, artifact: str) -> Report:
     """At least one receipt with current content hash, authorized role and roster membership."""
     report = Report()
@@ -86,8 +135,15 @@ def check(root: Path, cfg: dict, change_dir: Path, artifact: str) -> Report:
         else:
             valid.append(e)
     if not valid:
+        # The command is spelled out: the agent cannot run it, but it must be able to hand it to the human.
+        command = (f"python3 {VENDORED_CLI} approve {change_dir.name} {Path(artifact).name} "
+                   f"--as <username> --role {allowed[0]}")
         if stale:
-            report.error(f"{artifact}: approval by {', '.join(stale)} is stale (content changed); re-approve")
+            # `amend` shows the approver what changed, which is what makes re-approval meaningful.
+            report.error(f"{artifact}: approval by {', '.join(stale)} is stale (content changed); "
+                         f"a human reviews the diff and re-approves with: "
+                         f"{command.replace(' approve ', ' amend ', 1)}")
         else:
-            report.error(f"{artifact}: requires approval by one of roles {allowed} (`sdlc approve`)")
+            report.error(f"{artifact}: requires approval by one of roles {allowed}; "
+                         f"a human approves with: {command}")
     return report

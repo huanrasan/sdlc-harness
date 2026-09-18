@@ -37,7 +37,10 @@
 | **Rol** | `product-owner`, `tech-lead`, `architect`, `security`, `release-manager`, `sre`, `platform`, `ux-lead`, `data-steward`, `finops`. Una persona puede ocupar varios. |
 | **Matriz de autoridad** | La tabla `[authority]` que asocia cada artefacto con los roles que pueden aprobarlo. |
 | **Recibo de aprobación** | Una entrada en `approvals.toml` con el SHA-256 del artefacto aprobado, la persona que aprueba y su rol. Editar el artefacto lo invalida. |
-| **Separación de funciones** | La regla de que quien aprueba no puede ser autor del cambio; se verifica en CI contra los datos de la plataforma. |
+| **Separación de funciones** | La regla de que quien aprueba no puede ser autor del cambio; se verifica en CI contra los datos de la plataforma. Se desactiva cuando hay una sola persona manteniendo el repositorio, y entonces una firma de commit verificada reemplaza la revisión en la plataforma. |
+| **Enmienda** | Volver a aprobar un artefacto después de leer el diff desde la última aprobación (`sdlc amend`). Existe para que proteger un recibo nunca sea motivo para dejar información verdadera fuera de un documento. |
+| **Propuesta** | Una desviación o excepción escrita por un agente con el aprobador vacío: queda registrada y visible en `sdlc check`, pero no suprime nada hasta que la aprueba una persona con un rol autorizado. |
+| **Resultado abierto (`blocked` / `pending`)** | Un resultado de verificación que nombra dueño y motivo para un criterio que honestamente todavía no se puede verificar. El registro sigue siendo cierto; la compuerta sigue en rojo. |
 | **CODEOWNERS** | El archivo de la plataforma, generado desde el roster, que fuerza la revisión de las personas correctas. |
 
 ## Configuración y política

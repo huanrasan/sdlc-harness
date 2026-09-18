@@ -186,7 +186,7 @@ class LifecycleTests(HarnessCase):
         for fragment in ["compare at least two options", "decision is no-go",
                          "does not define states ['empty']", "accessibility checklist has unchecked items",
                          "privacy question 'purpose and lawful basis' is unanswered",
-                         "'Total monthly (production):' needs a number", "has no numeric monthly cost",
+                         "'Total monthly (production):' needs an amount", "has no numeric monthly cost",
                          "eval 'faithfulness' has no result before review",
                          "success metric 'mobile checkout conversion' from discovery.md is not reported"]:
             self.assertIn(fragment, out)

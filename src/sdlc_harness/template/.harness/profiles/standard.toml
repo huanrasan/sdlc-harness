@@ -1,4 +1,7 @@
 # standard: product teams. Evidence proportional to risk; independent review from medium risk.
+# Every change, including a low-risk `fix`, needs an approved spec.md here: that is the point of the
+# profile. For one person, or a team where each trivial fix would wait on a signature, use `lite`, where a
+# low-risk fix needs no spec and no receipt. Switch with `profile` in harness.toml.
 # A rule makes `artifact` mandatory once a change has moved PAST `phase`.
 # approve = true additionally requires a human receipt (`sdlc approve`) by a role from roster [authority].
 # scopes = [...] applies the rule only to changes declaring one of those scopes (change.toml `scopes`).

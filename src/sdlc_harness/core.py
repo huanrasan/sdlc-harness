@@ -59,7 +59,10 @@ class Report:
 
 def load_toml(path: Path) -> dict:
     with path.open("rb") as fh:
-        return tomllib.load(fh)
+        try:
+            return tomllib.load(fh)
+        except tomllib.TOMLDecodeError as exc:
+            raise HarnessError(f"{path}: invalid TOML: {exc}") from exc
 
 
 def load_config(root: Path) -> dict:

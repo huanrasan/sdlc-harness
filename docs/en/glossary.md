@@ -37,7 +37,10 @@
 | **Role** | `product-owner`, `tech-lead`, `architect`, `security`, `release-manager`, `sre`, `platform`, `ux-lead`, `data-steward`, `finops`. One person may hold several. |
 | **Authority matrix** | The `[authority]` table mapping artifact to the roles that may approve it. |
 | **Approval receipt** | An entry in `approvals.toml` with the SHA-256 of the approved artifact, the approver and their role. Editing the artifact voids it. |
-| **Separation of duties** | The rule that an approver may not have authored the change; enforced in CI against platform data. |
+| **Separation of duties** | The rule that an approver may not have authored the change; enforced in CI against platform data. Turned off for a single maintainer, where a verified commit signature replaces the platform review. |
+| **Amendment** | Re-approving an artifact after reading the diff since the last approval (`sdlc amend`). It exists so that protecting a receipt is never a reason to leave true information out of a document. |
+| **Proposal** | A deviation or exception written by an agent with an empty approver: recorded and visible in `sdlc check`, but suppressing nothing until a human with an authorized role approves it. |
+| **Open result (`blocked` / `pending`)** | A verification result that names an owner and a reason for a criterion that honestly cannot be verified yet. The record stays truthful; the gate stays red. |
 | **CODEOWNERS** | The platform file, generated from the roster, that forces review by the right people. |
 
 ## Configuration and policy
