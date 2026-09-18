@@ -173,6 +173,33 @@ class BaselineTests(HarnessCase):
         self.assertIn("awaits a human approver", out)
 
 
+class VendoredCliLimitsTests(unittest.TestCase):
+    """The vendored `.harness/sdlc.pyz` has no templates; commands that need them must say so, not crash.
+
+    Found while validating a real repository after an upgrade: `sdlc upgrade` from the vendored CLI ended in a
+    ValueError traceback from zipfile.
+    """
+
+    def test_upgrade_from_the_vendored_cli_explains_itself(self):
+        import subprocess
+        import sys
+        import tempfile
+        from pathlib import Path as P
+
+        from helpers import run, sh
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = P(tmp) / "repo"
+            repo.mkdir()
+            sh(repo, "git", "init", "-q")
+            self.assertEqual(run("init", str(repo), "--profile", "lite")[0], 0)
+            proc = subprocess.run([sys.executable, str(repo / ".harness/sdlc.pyz"), "upgrade", "--dry-run"],
+                                  cwd=repo, capture_output=True, text=True, env={"PATH": "/usr/bin:/bin"})
+            output = proc.stdout + proc.stderr
+            self.assertNotIn("Traceback", output)
+            self.assertIn("ships without templates", output)
+            self.assertIn("sdlc-full.pyz", output)
+
+
 class DistributionTests(unittest.TestCase):
     def test_generated_packages_are_in_sync(self):
         proc = subprocess.run([sys.executable, str(ROOT / "scripts/build_distribution.py"), "--check"],

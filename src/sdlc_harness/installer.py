@@ -41,6 +41,13 @@ def _walk(node, prefix: tuple[str, ...] = ()):
 def template_files(ci: str) -> dict[str, bytes]:
     """Template content as installed for a CI choice, keyed by repo-relative path (works from a zipapp too)."""
     root = resources.files("sdlc_harness") / "template"
+    if not root.is_dir():
+        # The vendored .harness/sdlc.pyz carries no templates on purpose: it runs the gates, it does not install.
+        raise HarnessError(
+            "this build of the CLI ships without templates, so it cannot install or upgrade a repository. "
+            "Run the command from the installed package (`pipx install sdlc-harness`, then `sdlc upgrade`) "
+            "or from the full bundle (`python3 sdlc-full.pyz upgrade`), both of which carry the templates."
+        )
     files = {}
     for rel, node in _walk(root):
         if rel.startswith("ci/"):

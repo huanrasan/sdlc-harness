@@ -13,6 +13,9 @@ versioning: [SemVer](https://semver.org/).
   nothing written to disk. Found by an eval run against a real agent, which failed for exactly that reason while
   following the guidance. The confirmation now happens with the record already open and the question written
   inside it.
+- `sdlc upgrade` run from the vendored `.harness/sdlc.pyz` ended in a `ValueError` traceback, because that build
+  carries no templates by design. It now explains that the command needs the installed package or `sdlc-full.pyz`.
+  Found while validating a real repository after its upgrade.
 
 ## [0.7.0] - 2026-09-18
 
