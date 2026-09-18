@@ -7,7 +7,7 @@ LINK_RE = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 HEADING_RE = re.compile(r"^#{1,6}\s+(.*?)\s*$", re.M)
 MERMAID_RE = re.compile(r"```mermaid\n(.*?)```", re.S)
 DOC_PAIRS = {"guide.md": "guia.md", "research.md": "investigacion.md", "controls.md": "controles.md",
-             "walkthrough.md": "recorrido.md"}
+             "walkthrough.md": "recorrido.md", "glossary.md": "glosario.md"}
 
 
 def markdown_files():

@@ -14,7 +14,7 @@ Choose one way to get the CLI (Python >= 3.11, no other dependencies):
 
 | Channel | Command |
 |---|---|
-| pipx (recommended) | `pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.3` then `sdlc ...` |
+| pipx (recommended) | `pipx install git+https://github.com/huanrasan/sdlc-harness@v0.6.0` then `sdlc ...` |
 | Single file, offline | download `sdlc-full.pyz` from the release, then `python3 sdlc-full.pyz ...` |
 | From source | `git clone ...` then `PYTHONPATH=src python3 -m sdlc_harness ...` |
 
@@ -92,6 +92,8 @@ Ask your agent for the work as usual. `AGENTS.md` sends it to the `sdlc-orchestr
 python3 .harness/sdlc.pyz new feature payment-retries --risk high   # opens docs/changes/<date>-payment-retries/
 python3 .harness/sdlc.pyz phase <id> design                          # blocked until spec.md is complete and approved
 python3 .harness/sdlc.pyz check                                      # same gate CI runs
+python3 .harness/sdlc.pyz status                                     # what blocks, who approves, what to run next
+python3 .harness/sdlc.pyz explain "<a gate message>"                 # why it blocked and how to fix it
 ```
 
 Required artifacts per profile, type and risk are defined in `.harness/profiles/<profile>.toml`. A rule makes

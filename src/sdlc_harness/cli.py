@@ -7,8 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from . import (adapters, architecture, audit, authority, changes, contracts, evidence, installer, mcp, memory,
-               platform, policy, receipts, reports, skills, tdd)
+from . import (adapters, architecture, audit, authority, changes, contracts, evidence, explain, installer, mcp,
+               memory, platform, policy, receipts, reports, skills, status, tdd)
 from .core import PHASES, PROFILES, RISKS, SCOPES, TYPES, VERSION, Report, git, load_config, paths
 
 CONVENTIONAL_RE = re.compile(
@@ -148,6 +148,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--agents", default="claude-code,codex,copilot,cursor,gemini-cli")
     p.add_argument("--mode", choices=["symlink", "copy"], default="symlink")
     p.add_argument("--ci", choices=["github", "gitlab", "none"], help="default: gitlab if .gitlab-ci.yml exists, else github")
+    p.add_argument("--interactive", "-i", action="store_true", help="ask for profile, agents, CI and roster")
     p.add_argument("--adopt", action="store_true",
                    help="existing repository: detect stack and commands, keep existing AGENTS.md, write an adoption report")
 
@@ -206,6 +207,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--dir", help="evidence directory (default: [evidence] dir or sdlc-evidence)")
     p.add_argument("--require", help="comma-separated evidence kinds, overriding the profile (e.g. sbom)")
 
+    p = sub.add_parser("status", help="where each change stands, what is missing and the next command")
+    p.add_argument("--change", help="only this change id")
+    p.add_argument("--format", choices=["text", "json"], default="text")
+
+    p = sub.add_parser("explain", help="explain a phase, artifact, role, concept or gate message")
+    p.add_argument("topic", nargs="?", help="phase, artifact, role, scope, concept, or a pasted gate message")
+
     p = sub.add_parser("org", help="vendor the organization policy, skills and memory")
     p.add_argument("action", choices=["pull"])
     p.add_argument("--source", help="local directory or git URL (default: [organization] source)")
@@ -256,8 +264,19 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(args.root).resolve()
     match args.command:
         case "init":
+            target = Path(args.target).resolve()
             agents = [a.strip() for a in args.agents.split(",") if a.strip()]
-            return installer.init(Path(args.target).resolve(), args.profile, agents, args.mode, args.ci, args.adopt)
+            profile, mode, ci, adopt, answers = args.profile, args.mode, args.ci, args.adopt, None
+            if args.interactive:
+                catalog = sorted(installer.adapter_catalog())
+                answers = installer.interactive_options(target, catalog, authority.TEMPLATE_ROLES)
+                profile, agents, ci, mode, adopt = (answers["profile"], answers["agents"], answers["ci"],
+                                                    answers["mode"], answers["adopt"])
+            code = installer.init(target, profile, agents, mode, ci, adopt)
+            if code == 0 and answers:
+                installer.apply_roster(target, answers["members"], answers["separation_of_duties"])
+                print("roster updated; review .harness/roster.toml then run `codeowners`")
+            return code
         case "sync":
             return installer.sync(root)
         case "upgrade":
@@ -305,6 +324,15 @@ def main(argv: list[str] | None = None) -> int:
                 return evidence.baseline(root, load_config(root), args.dir, args.days)
             require = [k for k in args.require.split(",") if k] if args.require is not None else None
             return evidence.check(root, load_config(root), args.dir, require).print()
+        case "status":
+            return status.run(root, load_config(root), args.change, args.format)
+        case "explain":
+            cfg = None
+            try:
+                cfg = load_config(root)
+            except SystemExit:
+                pass  # explain works outside an installed repository too
+            return explain.explain(args.topic, cfg, root)
         case "org":
             return policy.pull(root, load_config(root), args.source, args.ref)
         case "memory":

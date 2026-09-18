@@ -71,6 +71,12 @@ def build_pyz(target: Path, full: bool = False) -> None:
     target.chmod(0o755)
 
 
+def adapter_catalog() -> list[str]:
+    """Agent keys shipped in the template's adapters.toml."""
+    text = (resources.files("sdlc_harness") / "template" / ".harness" / "adapters.toml").read_text(encoding="utf-8")
+    return list(tomllib.loads(text).get("adapters", {}))
+
+
 def detect_ci(root: Path) -> str:
     if (root / ".gitlab-ci.sdlc.yml").exists():
         return "gitlab"
@@ -317,3 +323,55 @@ def sync(root: Path) -> int:
         memory.write_index(root)
     adapters.sync(root, cfg)
     return 0
+
+
+# --------------------------------------------------------------------------- guided setup
+
+def _ask(prompt: str, options: list[str] | None, default: str) -> str:
+    suffix = f" [{'/'.join(options)}]" if options else ""
+    while True:
+        try:
+            answer = input(f"{prompt}{suffix} ({default}): ").strip() or default
+        except EOFError:  # non-interactive stdin: keep the defaults instead of failing
+            print(f"{prompt}{suffix}: {default} (default, no input available)")
+            return default
+        if options is None or answer in options:
+            return answer
+        print(f"  choose one of: {', '.join(options)}")
+
+
+def interactive_options(target: Path, catalog: list[str], roles: list[str]) -> dict:
+    """Ask the questions `init` needs instead of requiring three files to be edited by hand."""
+    print(f"Guided setup for {target}\n")
+    profile = _ask("Profile: lite (solo), standard (team), regulated (audit)", ["lite", "standard", "regulated"],
+                   "standard")
+    default_agents = "claude-code,codex,copilot,cursor,gemini-cli"
+    print(f"  known agents: {', '.join(catalog)}")
+    agents = [a.strip() for a in _ask("Agents (comma separated)", None, default_agents).split(",") if a.strip()]
+    ci_default = "gitlab" if (target / ".gitlab-ci.yml").exists() else "github"
+    ci = _ask("CI platform", ["github", "gitlab", "none"], ci_default)
+    mode = _ask("Skill links for agents that need them", ["symlink", "copy"], "symlink")
+    adopt = _ask("Existing repository? Detect stack and keep your AGENTS.md", ["yes", "no"],
+                 "yes" if any(target.glob("*")) else "no") == "yes"
+    print("\nRoster: who holds each role (platform usernames, comma separated; empty to fill in later)")
+    members = {role: [m.strip() for m in _ask(f"  {role}", None, "").split(",") if m.strip()] for role in roles}
+    solo = {m for ms in members.values() for m in ms}
+    sod_default = "no" if len(solo) <= 1 else "yes"
+    sod = _ask("Enforce separation of duties (an approver cannot author the change)", ["yes", "no"],
+               sod_default) == "yes"
+    return {"profile": profile, "agents": agents, "ci": ci, "mode": mode, "adopt": adopt,
+            "members": members, "separation_of_duties": sod}
+
+
+def apply_roster(target: Path, members: dict[str, list[str]], separation_of_duties: bool) -> None:
+    path = target / ".harness" / "roster.toml"
+    if not path.exists():
+        return
+    text = path.read_text(encoding="utf-8")
+    for role, people in members.items():
+        if people:
+            text = text.replace(f"[roles.{role}]\nmembers = []",
+                                f"[roles.{role}]\nmembers = [{', '.join(json.dumps(p) for p in people)}]")
+    if not separation_of_duties:
+        text = text.replace("separation_of_duties = true", "separation_of_duties = false")
+    path.write_text(text, encoding="utf-8")

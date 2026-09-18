@@ -1,0 +1,7 @@
+id = "2026-09-17-staff-csv-export"
+type = "feature"
+risk = "medium"
+phase = "done"
+scopes = ["ui", "api"]
+ai_assisted = true
+adrs = []

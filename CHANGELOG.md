@@ -5,6 +5,25 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-18
+
+### Added
+- `sdlc status`: one screen per change with the current blockers, pending approvals (role and the people who hold it)
+  and the exact next command; `--format json` for tooling. Also exposed as the MCP `change_status` tool.
+- `sdlc explain <topic|message>`: phases, artifacts (with the profile's rules and approvers), roles, scopes, concepts
+  and a catalogue of gate messages with cause and fix. Works outside an installed repository. Also an MCP tool.
+- `sdlc init --interactive`: guided setup for profile, agents, CI, link mode, adoption and roster members.
+- `docs/examples/`: a complete change record produced with the harness, passing every gate with no traceability gaps,
+  plus its `report trace` and `status` output, and a README explaining what to look at.
+- Bilingual glossary (`docs/en/glossary.md`, `docs/es/glosario.md`).
+- Documentation site built with MkDocs Material and published to GitHub Pages (`mkdocs.yml`, `docs/index.md`,
+  `.github/workflows/docs.yml`).
+- Animated terminal demo for the README, recorded from real command output (`scripts/record_demo.py`,
+  `docs/assets/demo.svg`), with a `--check` mode wired into the tests.
+
+### Changed
+- `sdlc phase` points at `sdlc status` when a gate blocks.
+
 ## [0.5.3] - 2026-09-17
 
 ### Added

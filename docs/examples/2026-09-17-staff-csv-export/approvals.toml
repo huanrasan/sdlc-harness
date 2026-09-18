@@ -1,0 +1,29 @@
+# Approval receipts. Written by `sdlc approve`; verified by `sdlc check` and `sdlc approvals verify`.
+
+[[approval]]
+artifact = "docs/changes/2026-09-17-staff-csv-export/discovery.md"
+sha256 = "ae6b3a077a9137e3b63955e34d158e1d4e3c1bd77ccacda0070b3d587da38f29"
+role = "product-owner"
+approver = "pat"
+approved_at = "2026-09-17T23:20:24+00:00"
+
+[[approval]]
+artifact = "docs/changes/2026-09-17-staff-csv-export/spec.md"
+sha256 = "ca155252b9fba1a2f368779bb275876fa47c3435b810ba987158260d84c59347"
+role = "product-owner"
+approver = "pat"
+approved_at = "2026-09-17T23:20:24+00:00"
+
+[[approval]]
+artifact = "docs/changes/2026-09-17-staff-csv-export/design.md"
+sha256 = "51b2fc74dc029ed0f09447417e51ff3431cb7285149e36ce0e3780022ad162fb"
+role = "tech-lead"
+approver = "tomas"
+approved_at = "2026-09-17T23:20:25+00:00"
+
+[[approval]]
+artifact = "docs/changes/2026-09-17-staff-csv-export/release.md"
+sha256 = "9fcd7b34615e6ce5b061bc1b87002e12a5004d401d40cd86a3e04cc727b0133c"
+role = "release-manager"
+approver = "rita"
+approved_at = "2026-09-17T23:20:26+00:00"

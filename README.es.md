@@ -8,7 +8,7 @@ las mismas compuertas deterministas, desde la especificación hasta la operació
 desarrollador individual hasta una organización regulada. No depende del stack ni de la nube: funciona en nube
 pública, nube privada, on-prem o entornos air-gapped.
 
-**Estado:** v0.5.3, versión preliminar.
+**Estado:** v0.6.0, versión preliminar.
 
 ## Por qué
 
@@ -33,7 +33,8 @@ estándares abiertos para que un equipo pueda cambiar o combinar agentes sin reh
   vencimiento).
 - **Política de organización y memoria**: política obligatoria vendorizada con desviaciones que vencen, memoria
   revisada en PR y un servidor MCP con herramientas de solo lectura (salvo `memory_add`) para cualquier agente.
-- **Visibilidad**: reportes de trazabilidad, flujo de entrega y métricas estilo DORA en Markdown, JSON o HTML.
+- **Visibilidad**: reportes de trazabilidad, flujo de entrega y métricas estilo DORA en Markdown, JSON o HTML;
+  `sdlc status` dice qué falta y quién debe aprobar, y `sdlc explain` documenta cualquier fase, artefacto, rol o mensaje.
 - **Distribución y actualizaciones**: pipx o un único archivo sin red, marketplace de plugins de Claude Code,
   extensión de Gemini CLI, `npx skills add`; adopción en repos existentes con detección del stack; `sdlc upgrade` de 3
   vías que conserva las personalizaciones.
@@ -42,6 +43,8 @@ estándares abiertos para que un equipo pueda cambiar o combinar agentes sin reh
 - **Perfiles** `lite`, `standard` y `regulated` que exigen artefactos según el tipo y el riesgo del cambio.
 - **Adaptadores** generados para los agentes que no leen `.agents/skills` de forma nativa.
 - **Matriz de controles** mapeada a NIST SSDF, SLSA, OWASP Agentic Top 10, DORA y marcos de gobierno de IA.
+
+![Un cambio a través del arnés: status muestra el bloqueo, una persona aprueba y editar el artefacto invalida la aprobación](docs/assets/demo.svg)
 
 ## Cómo funciona
 
@@ -64,8 +67,8 @@ y la siguiente no empieza hasta que la compuerta pasa y la persona correspondien
 ## Inicio rápido
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.3
-sdlc init ../mi-servicio --profile standard      # add --adopt for an existing repository
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.6.0
+sdlc init ../mi-servicio --interactive           # instalación guiada; agregá --adopt en un repo existente
 cd ../mi-servicio
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor
 python3 .harness/sdlc.pyz new feature payment-retries --risk medium
@@ -77,6 +80,9 @@ Luego pídele a tu agente que trabaje en el cambio: `AGENTS.md` lo dirige a la s
 
 | | Español | English |
 |---|---|---|
+| Sitio de documentación | [huanrasan.github.io/sdlc-harness](https://huanrasan.github.io/sdlc-harness/) | ídem |
+| Ejemplo completo de un cambio | [docs/examples/](docs/examples/README.md) | ídem |
+| Glosario | [docs/es/glosario.md](docs/es/glosario.md) | [docs/en/glossary.md](docs/en/glossary.md) |
 | Guía paso a paso | [docs/es/recorrido.md](docs/es/recorrido.md) | [docs/en/walkthrough.md](docs/en/walkthrough.md) |
 | Guía de uso (referencia) | [docs/es/guia.md](docs/es/guia.md) | [docs/en/guide.md](docs/en/guide.md) |
 | Investigación y fundamentos del diseño | [docs/es/investigacion.md](docs/es/investigacion.md) | [docs/en/research.md](docs/en/research.md) |

@@ -2,7 +2,7 @@
 
 The SDLC harness turns the development process into evidence a machine can check and humans approve.
 Agents read `AGENTS.md` and the skills in `.agents/skills/`; the gates run locally (git hooks), in CI and on the
-platform. Full documentation: https://github.com/huanrasan/sdlc-harness (step-by-step walkthrough in English and Spanish).
+platform. Full documentation: https://huanrasan.github.io/sdlc-harness/ (step-by-step walkthrough in English and Spanish).
 
 ## One change, end to end
 
@@ -27,6 +27,8 @@ Phases: `discover → spec → design → plan → implement → verify → revi
 |---|---|
 | `python3 .harness/sdlc.pyz new <fix\|feature\|architecture\|retirement> <slug> --risk <low\|medium\|high> [--scope ui,api,data,personal-data,infra,ai]` | open a change record |
 | `python3 .harness/sdlc.pyz phase <id> <phase>` | advance when the gate passes |
+| `python3 .harness/sdlc.pyz status [--change <id>]` | what blocks the change, who must approve, the next command |
+| `python3 .harness/sdlc.pyz explain <topic or gate message>` | what a phase, artifact, role or error means |
 | `python3 .harness/sdlc.pyz check [--change <id>] [--base origin/main]` | run the gates locally |
 | `python3 .harness/sdlc.pyz approve <id> <artifact> --as <user> --role <role>` | **humans only**: approval receipt |
 | `python3 .harness/sdlc.pyz memory search "<topic>"` | prior decisions and pitfalls |

@@ -1,7 +1,8 @@
 # Step-by-step walkthrough
 
 > Versión en español: [../es/recorrido.md](../es/recorrido.md)
-> Reference documentation: [guide](guide.md) · [controls matrix](controls.md) · [decisions](../adr/README.md)
+> Reference: [guide](guide.md) · [glossary](glossary.md) · [controls matrix](controls.md) · [decisions](../adr/README.md)
+> A finished change record produced with the harness: [example](../examples/README.md)
 
 This page follows one change from idea to production with the commands, who runs each one, and what happens when a
 gate blocks. The running example is a booking web app for appointment-based businesses.
@@ -65,7 +66,7 @@ Decide the profile: `lite` (individuals, minimum evidence), `standard` (product 
 ## 3. Install and configure (about ten minutes)
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.5.3
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.6.0
 sdlc init path/to/your-repo --profile standard --agents claude-code,codex,gemini-cli
 cd path/to/your-repo
 ```
@@ -321,7 +322,9 @@ chains and platform approvals, and those edits fail louder.
 
 | Command | Who | Purpose |
 |---|---|---|
-| `sdlc init <dir> [--adopt]` | human | install; `--adopt` for an existing repository |
+| `sdlc init <dir> [--interactive] [--adopt]` | human | install; `--interactive` asks the questions, `--adopt` reads an existing repository |
+| `sdlc status [--change <id>]` | both | where the change stands, what blocks it, who approves and the next command |
+| `sdlc explain <topic\|message>` | both | phase, artifact, role, scope, concept or the meaning of a gate message |
 | `sdlc upgrade [--dry-run]` | human | move to a new harness version keeping customizations |
 | `sdlc doctor` | human | configuration and controls review |
 | `sdlc sync` | agent or human | regenerate skills index and agent adapters |
