@@ -16,6 +16,10 @@ versioning: [SemVer](https://semver.org/).
 - `sdlc upgrade` run from the vendored `.harness/sdlc.pyz` ended in a `ValueError` traceback, because that build
   carries no templates by design. It now explains that the command needs the installed package or `sdlc-full.pyz`.
   Found while validating a real repository after its upgrade.
+- The eval runner counted an agent that never ran - expired session, missing credential, usage limit - as a
+  behavioural failure. Trials where the agent exits non-zero without touching the repository are now reported as
+  `ERROR`, excluded from the pass rates and listed as "not measured", and the runner exits 2 when nothing could be
+  measured. A usage limit hit mid-run is what exposed this.
 
 ## [0.7.0] - 2026-09-18
 

@@ -162,7 +162,12 @@ def run_trial(agent: str, spec: dict, name: str, scenario: dict, keep: bool) -> 
             results.append({"kind": expect["kind"], "soft": expect.get("soft", False), "passed": ok, "detail": detail,
                             "why": expect.get("why", "")})
         hard = [r for r in results if not r["soft"]]
-        return {"agent": agent, "scenario": name, "passed": all(r["passed"] for r in hard) and exit_code == 0,
+        passed = all(r["passed"] for r in hard) and exit_code == 0
+        # An agent that exited non-zero without touching the repository never ran: an expired session, a missing
+        # credential or a usage limit is not a governance failure, and counting it as one corrupts the measurement.
+        untouched = not sh(workdir, "git", "status", "--porcelain").strip()
+        status = "error" if exit_code != 0 and untouched else ("pass" if passed else "fail")
+        return {"agent": agent, "scenario": name, "passed": passed, "status": status,
                 "exit_code": exit_code, "duration_s": duration, "checks": results,
                 "transcript_tail": transcript[-2000:], "workdir": str(workdir) if keep else None}
     finally:
@@ -177,17 +182,26 @@ def summarize(results: list[dict]) -> str:
     for r in results:
         groups.setdefault((r["agent"], r["scenario"]), []).append(r)
     for (agent, scenario), rs in sorted(groups.items()):
-        passed = sum(1 for r in rs if r["passed"])
-        failed = sorted({f"{c['kind']}: {c['detail']}" for r in rs for c in r["checks"] if not c["passed"] and not c["soft"]}
-                        | {f"exit {r['exit_code']}" for r in rs if r["exit_code"] != 0})
-        lines.append(f"| {agent} | {scenario} | {passed}/{len(rs)} | {passed / len(rs):.0%} | "
+        graded = [r for r in rs if r.get("status") != "error"]
+        errored = len(rs) - len(graded)
+        passed = sum(1 for r in graded if r["passed"])
+        failed = sorted({f"{c['kind']}: {c['detail']}" for r in graded for c in r["checks"]
+                         if not c["passed"] and not c["soft"]}
+                        | {f"exit {r['exit_code']}" for r in graded if r["exit_code"] != 0})
+        if errored:
+            failed.append(f"{errored} trial(s) not measured: the agent did not run")
+        rate = f"{passed / len(graded):.0%}" if graded else "n/a"
+        lines.append(f"| {agent} | {scenario} | {passed}/{len(graded)} | {rate} | "
                      f"{'; '.join(failed)[:300].replace('|', '/') or '-'} |")
     by_agent: dict[str, list[dict]] = {}
     for r in results:
         by_agent.setdefault(r["agent"], []).append(r)
-    lines += ["", "| Agent | Overall pass rate |", "|---|---|"]
-    lines += [f"| {a} | {sum(r['passed'] for r in rs) / len(rs):.0%} ({sum(r['passed'] for r in rs)}/{len(rs)}) |"
-              for a, rs in sorted(by_agent.items())]
+    lines += ["", "| Agent | Overall pass rate | Not measured |", "|---|---|---|"]
+    for a, rs in sorted(by_agent.items()):
+        graded = [r for r in rs if r.get("status") != "error"]
+        passed = sum(r["passed"] for r in graded)
+        rate = f"{passed / len(graded):.0%} ({passed}/{len(graded)})" if graded else "n/a (0 trials measured)"
+        lines.append(f"| {a} | {rate} | {len(rs) - len(graded)} |")
     return "\n".join(lines) + "\n"
 
 
@@ -198,10 +212,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--trials", type=int, default=1)
     parser.add_argument("--keep", action="store_true", help="keep working directories for inspection")
     parser.add_argument("--output", default=str(EVALS / "results"))
+    parser.add_argument("--agents-file", default=str(EVALS / "agents.toml"),
+                        help="adapter definitions (default: evals/agents.toml)")
     parser.add_argument("--list", action="store_true")
     args = parser.parse_args(argv)
 
-    agents = tomllib.loads((EVALS / "agents.toml").read_text())["agents"]
+    agents = tomllib.loads(Path(args.agents_file).read_text())["agents"]
     scenarios = {p.name: tomllib.loads((p / "scenario.toml").read_text())
                  for p in sorted((EVALS / "scenarios").iterdir()) if (p / "scenario.toml").exists()}
     if args.list:
@@ -223,7 +239,12 @@ def main(argv: list[str] | None = None) -> int:
             for trial in range(args.trials):
                 r = run_trial(agent, spec, name, scenarios[name], args.keep)
                 results.append(r)
-                print(f"{'PASS' if r['passed'] else 'FAIL'} {agent} {name} #{trial + 1} ({r['duration_s']}s)")
+                label = {"pass": "PASS", "fail": "FAIL", "error": "ERROR"}[r["status"]]
+                note = ""
+                if r["status"] == "error":
+                    note = f" - agent did not run: {r['transcript_tail'].strip().splitlines()[-1][:80]}" \
+                        if r["transcript_tail"].strip() else " - agent did not run"
+                print(f"{label} {agent} {name} #{trial + 1} ({r['duration_s']}s){note}")
     if not results:
         return 1
     out = Path(args.output)
@@ -233,7 +254,13 @@ def main(argv: list[str] | None = None) -> int:
     summary = summarize(results)
     (out / f"{stamp}.md").write_text(summary)
     print("\n" + summary)
-    return 0 if all(r["passed"] for r in results) else 1
+    graded = [r for r in results if r.get("status") != "error"]
+    if len(graded) < len(results):
+        print(f"\n{len(results) - len(graded)} of {len(results)} trial(s) could not be measured: the agent exited "
+              f"without touching the repository. Those are excluded from the rates above; re-run them.")
+    if not graded:
+        return 2
+    return 0 if all(r["passed"] for r in graded) else 1
 
 
 if __name__ == "__main__":

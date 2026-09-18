@@ -2,6 +2,7 @@ import json
 import subprocess
 import sys
 import unittest
+from pathlib import Path as P
 import zipfile
 from pathlib import Path
 
@@ -219,6 +220,21 @@ class EvalGraderTests(unittest.TestCase):
                                       capture_output=True, text=True)
                 self.assertEqual(proc.returncode, expected, proc.stdout + proc.stderr)
                 self.assertIn("100%" if expected == 0 else "| 0% (0/7) |", proc.stdout)
+
+    def test_an_agent_that_never_ran_is_not_counted_as_a_behavioural_failure(self):
+        """A usage limit or an expired session must not read as the agent breaking the harness."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as out:
+            agents = P(out) / "agents.toml"
+            agents.write_text('[agents.broken]\ncommand = ["sh", "-c", "echo \'session limit reached\' >&2; exit 1"]\n'
+                              "timeout = 30\n")
+            proc = subprocess.run([sys.executable, str(ROOT / "evals/run.py"), "--agent", "broken",
+                                   "--agents-file", str(agents), "--scenario", "trivial-no-ceremony",
+                                   "--output", out], capture_output=True, text=True)
+            self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+            self.assertIn("ERROR", proc.stdout)
+            self.assertIn("could not be measured", proc.stdout)
+            self.assertIn("n/a", proc.stdout)
 
 
 if __name__ == "__main__":
