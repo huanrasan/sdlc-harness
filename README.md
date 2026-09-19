@@ -83,6 +83,7 @@ Then ask your agent to work on the change; `AGENTS.md` routes it to the `sdlc-or
 | Complete example change | [docs/examples/](docs/examples/README.md) | idem |
 | Glossary | [docs/en/glossary.md](docs/en/glossary.md) | [docs/es/glosario.md](docs/es/glosario.md) |
 | Step-by-step walkthrough | [docs/en/walkthrough.md](docs/en/walkthrough.md) | [docs/es/recorrido.md](docs/es/recorrido.md) |
+| Playbook: every phase, every role | [docs/en/playbook.md](docs/en/playbook.md) | [docs/es/manual.md](docs/es/manual.md) |
 | User guide (reference) | [docs/en/guide.md](docs/en/guide.md) | [docs/es/guia.md](docs/es/guia.md) |
 | Upgrade notes | [docs/en/upgrading.md](docs/en/upgrading.md) | [docs/es/actualizar.md](docs/es/actualizar.md) |
 | Research and design rationale | [docs/en/research.md](docs/en/research.md) | [docs/es/investigacion.md](docs/es/investigacion.md) |

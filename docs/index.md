@@ -18,6 +18,7 @@ sdlc init path/to/your-repo --profile standard      # add --adopt for an existin
 | | English | Español |
 |---|---|---|
 | Step by step | [Walkthrough](en/walkthrough.md) | [Recorrido](es/recorrido.md) |
+| Phase by phase, role by role | [Playbook](en/playbook.md) | [Manual](es/manual.md) |
 | Reference | [Guide](en/guide.md) | [Guía](es/guia.md) |
 | Upgrading | [Upgrade notes](en/upgrading.md) | [Notas de actualización](es/actualizar.md) |
 | Vocabulary | [Glossary](en/glossary.md) | [Glosario](es/glosario.md) |

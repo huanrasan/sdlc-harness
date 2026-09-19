@@ -3,6 +3,7 @@
 > Versión en español: [../es/recorrido.md](../es/recorrido.md)
 > Reference: [guide](guide.md) · [glossary](glossary.md) · [controls matrix](controls.md) · [decisions](../adr/README.md)
 > A finished change record produced with the harness: [example](../examples/README.md)
+> The same trip in full detail, phase by phase and role by role: [playbook](playbook.md)
 
 This page follows one change from idea to production with the commands, who runs each one, and what happens when a
 gate blocks. The running example is a booking web app for appointment-based businesses.

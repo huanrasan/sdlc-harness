@@ -87,6 +87,7 @@ Luego pídele a tu agente que trabaje en el cambio: `AGENTS.md` lo dirige a la s
 | Ejemplo completo de un cambio | [docs/examples/](docs/examples/README.md) | ídem |
 | Glosario | [docs/es/glosario.md](docs/es/glosario.md) | [docs/en/glossary.md](docs/en/glossary.md) |
 | Guía paso a paso | [docs/es/recorrido.md](docs/es/recorrido.md) | [docs/en/walkthrough.md](docs/en/walkthrough.md) |
+| Manual: cada fase, cada rol | [docs/es/manual.md](docs/es/manual.md) | [docs/en/playbook.md](docs/en/playbook.md) |
 | Guía de uso (referencia) | [docs/es/guia.md](docs/es/guia.md) | [docs/en/guide.md](docs/en/guide.md) |
 | Notas de actualización | [docs/es/actualizar.md](docs/es/actualizar.md) | [docs/en/upgrading.md](docs/en/upgrading.md) |
 | Investigación y fundamentos del diseño | [docs/es/investigacion.md](docs/es/investigacion.md) | [docs/en/research.md](docs/en/research.md) |

@@ -3,6 +3,7 @@
 > English version: [../en/walkthrough.md](../en/walkthrough.md)
 > Referencia: [guía](guia.md) · [glosario](glosario.md) · [matriz de controles](controles.md) · [decisiones](../adr/README.md)
 > Un change record terminado, producido con el arnés: [ejemplo](../examples/README.md)
+> El mismo recorrido en detalle, fase por fase y rol por rol: [manual](manual.md)
 
 Esta página sigue un cambio desde la idea hasta producción, con los comandos, quién ejecuta cada uno y qué hacer cuando
 una compuerta bloquea. El ejemplo que usamos es una app web de reservas para negocios que trabajan con citas.
