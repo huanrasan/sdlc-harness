@@ -61,6 +61,9 @@ skill `sdlc-install` realiza si se lo pides):
 
 ## Actualizar
 
+Las consecuencias propias de cada versión, incluido lo que puede poner tu pipeline en rojo, están en las
+[notas de actualización](actualizar.md). Conviene leerlas antes de aplicar un salto de versión menor.
+
 ```bash
 pipx upgrade sdlc-harness            # o descarga el nuevo sdlc-full.pyz
 sdlc upgrade --dry-run               # revisar
@@ -140,7 +143,25 @@ git add docs/changes/<id> && git commit -m "docs: approve spec" && git push
 # luego envía una revisión aprobatoria en el pull request
 ```
 
-El recibo guarda el SHA-256 del artefacto; si el artefacto se edita después, la aprobación queda invalidada. En CI,
+El recibo guarda el SHA-256 del artefacto; si el artefacto se edita después, la aprobación queda invalidada. Quien
+aprobó revisa qué cambió y vuelve a aprobar en un solo paso, que es lo que mantiene honestos a los documentos:
+
+```bash
+python3 .harness/sdlc.pyz amend <id> release.md --as rita --role release-manager   # solo personas, requiere terminal
+```
+
+`amend` imprime el diff entre el contenido aprobado, recuperado de git por su hash, y el archivo tal como está, y
+registra un recibo nuevo cuando quien aprueba escribe `yes`. Se niega a ejecutarse si la entrada estándar no es una
+terminal, así que un agente no puede usarlo. Nunca saques información verdadera de un artefacto aprobado para
+proteger su recibo: agregá los digests publicados a `release.md` y enmendá.
+
+Con `separation_of_duties = false` en `.harness/roster.toml`, para un repositorio con una sola persona que lo
+mantiene y no puede aprobar su propio pull request, una firma de commit que la plataforma verifica reemplaza esa
+revisión: el recibo tiene que llegar en un commit firmado por quien aprueba, con la clave de firma registrada en la
+plataforma. La configuración inicial está en las
+[notas de actualización](actualizar.md#si-sos-la-única-persona-que-mantiene-el-repositorio-activá-la-firma-de-commits).
+
+En CI,
 `sdlc approvals verify` confirma con la API de GitHub o GitLab que la persona indicada aprobó un commit que contiene
 exactamente ese contenido y el recibo, que pertenece al rol (directamente o mediante un equipo) y, con
 `separation_of_duties`, que no es autora del pull request ni del artefacto. Cada cambio mantiene además un
@@ -197,6 +218,19 @@ Una excepción justificada va en `.harness/deviations.toml` con `policy` (la cla
 `approver`, `role` (permitido por `[authority] deviation` del roster) y `expires`. Las desviaciones vencidas fallan y las
 que ya no se usan generan advertencia.
 
+Un agente puede escribir la propuesta pero nunca la aprobación, así que las dos mitades son comandos distintos:
+
+```bash
+sdlc deviation propose sensors.test_first --reason "módulo legacy, ISSUE-42 agrega tests" --days 60   # agente
+sdlc deviation approve sensors.test_first --as ana --role architect                                   # solo personas
+sdlc exception propose semgrep.eval-detected "tools/legacy/*.py" --reason "allowlist fija"            # agente
+sdlc exception approve semgrep.eval-detected "tools/legacy/*.py" --as sam --role security             # solo personas
+```
+
+`propose` escribe la entrada con el aprobador vacío y un vencimiento. Hasta que alguien autorizado la aprueba no
+suprime nada, y `sdlc check` la lista como pendiente junto con el comando exacto para confirmarla. Esto es lo que
+evita que el riesgo aceptado termine en prosa, donde nada lo hace caducar.
+
 ## Memoria y MCP
 
 `sdlc memory add --type decision|lesson|convention|pitfall|glossary --title ... --tags ... --body ...` crea una entrada
@@ -231,6 +265,19 @@ tiene un nivel por perfil (`[sensors]` en `.harness/profiles/<perfil>.toml`: `er
 | Contratos (`sdlc contracts`) | sin cambios incompatibles en `[contracts] files` (OpenAPI 3.x, AsyncAPI 2.x/3.x) salvo que suba el major de `info.version` | subir la versión major |
 | Evidencia (`sdlc evidence check`) | archivos SARIF/SBOM requeridos presentes; ningún hallazgo igual o superior a `[evidence] fail_on`; ninguna licencia prohibida | entrada en `.harness/exceptions.toml` con motivo, aprobador y vencimiento |
 
+Qué archivos mira cada sensor sale de `tdd.test_globs` y `tdd.source_globs` en `harness.toml`, con semántica de globs
+de git: `**` abarca cualquier cantidad de directorios incluyendo ninguno, y `*` y `?` no cruzan una barra. Un archivo
+que queda fuera de ambas listas se clasifica como `other` y ningún sensor lo mira, algo invisible hasta que importa,
+así que conviene comprobarlo:
+
+```bash
+python3 .harness/sdlc.pyz tdd --explain     # clasificación de cada archivo versionado, con aviso si falta código
+```
+
+El job `workflows` de CI ejecuta actionlint (sintaxis, expresiones y shellcheck sobre cada bloque `run:`) y zizmor
+(persistencia de credenciales, inyección, permisos excesivos). El arnés exige acciones fijadas por SHA de commit y
+nada de interpolar contexto no confiable dentro de `run:`; esos dos linters son lo que lo verifica.
+
 Los escáneres son reemplazables: sirve cualquiera que escriba SARIF (`sdlc-evidence/<tipo>.sarif`) o CycloneDX JSON
 (`sdlc-evidence/sbom*.json`). El job `sensors` de CI incluye contenedores de gitleaks, Semgrep, Trivy, Syft y Checkov;
 fíjalos por digest y replícalos en un registro interno para CI privada o air-gapped.
@@ -240,6 +287,16 @@ fíjalos por digest y replícalos en un registro interno para CI privada o air-g
 Crear un tag `v*` ejecuta `.github/workflows/sdlc-release.yml` (o los jobs `release-*` de GitLab): compuertas sobre el
 commit etiquetado, tu `scripts/build-release`, SBOM CycloneDX validado contra la política de licencias, attestations de
 procedencia SLSA y de SBOM, firmas keyless con Sigstore y la publicación, detrás de un entorno protegido `production`.
+
+El contrato de build: `scripts/build-release` es ejecutable, no recibe argumentos y deja en `dist/` todo lo que se va
+a publicar. La procedencia, las firmas y el release se generan a partir de `dist/*`, así que lo que quede en otro
+lado no se firma ni se publica. Definí `[release] sbom_source` en `harness.toml` según lo que realmente entregás:
+`dir:dist` inventaría archivos, mientras que un release en contenedor necesita `docker-archive:dist/<imagen>.tar` (u
+`oci-archive:`) — escanear una imagen guardada como si fuera un directorio produce un SBOM del tarball y entonces la
+política de licencias no verifica nada.
+
+La firma usa `--new-bundle-format`, el bundle actual de Sigstore. cosign 3 lo verifica con la receta de la cabecera
+del workflow; cosign 2.x necesita ese mismo flag en `verify-blob`.
 
 ## Cómo funciona
 

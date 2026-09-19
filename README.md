@@ -7,7 +7,7 @@ Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf, OpenCode...) the same guide
 gates, from specification to operation, with controls that scale from a solo developer to a regulated organization.
 Stack- and cloud-agnostic: public cloud, private cloud, on-prem or air-gapped.
 
-**Status:** v0.7.1, early preview.
+**Status:** v0.7.2, early preview.
 
 ## Why
 
@@ -66,7 +66,7 @@ evidence, and the next phase does not start until the gate passes and the requir
 ## Quick start
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.1
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.2
 sdlc init ../my-service --interactive           # guided setup; add --adopt for an existing repository
 cd ../my-service
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor
@@ -84,6 +84,7 @@ Then ask your agent to work on the change; `AGENTS.md` routes it to the `sdlc-or
 | Glossary | [docs/en/glossary.md](docs/en/glossary.md) | [docs/es/glosario.md](docs/es/glosario.md) |
 | Step-by-step walkthrough | [docs/en/walkthrough.md](docs/en/walkthrough.md) | [docs/es/recorrido.md](docs/es/recorrido.md) |
 | User guide (reference) | [docs/en/guide.md](docs/en/guide.md) | [docs/es/guia.md](docs/es/guia.md) |
+| Upgrade notes | [docs/en/upgrading.md](docs/en/upgrading.md) | [docs/es/actualizar.md](docs/es/actualizar.md) |
 | Research and design rationale | [docs/en/research.md](docs/en/research.md) | [docs/es/investigacion.md](docs/es/investigacion.md) |
 | Controls matrix | [docs/en/controls.md](docs/en/controls.md) | [docs/es/controles.md](docs/es/controles.md) |
 | Decisions (ADRs) | [docs/adr/](docs/adr/README.md) | |

@@ -8,7 +8,7 @@ las mismas compuertas deterministas, desde la especificación hasta la operació
 desarrollador individual hasta una organización regulada. No depende del stack ni de la nube: funciona en nube
 pública, nube privada, on-prem o entornos air-gapped.
 
-**Estado:** v0.7.1, versión preliminar.
+**Estado:** v0.7.2, versión preliminar.
 
 ## Por qué
 
@@ -70,7 +70,7 @@ y la siguiente no empieza hasta que la compuerta pasa y la persona correspondien
 ## Inicio rápido
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.1
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.2
 sdlc init ../mi-servicio --interactive           # instalación guiada; agregá --adopt en un repo existente
 cd ../mi-servicio
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor
@@ -88,6 +88,7 @@ Luego pídele a tu agente que trabaje en el cambio: `AGENTS.md` lo dirige a la s
 | Glosario | [docs/es/glosario.md](docs/es/glosario.md) | [docs/en/glossary.md](docs/en/glossary.md) |
 | Guía paso a paso | [docs/es/recorrido.md](docs/es/recorrido.md) | [docs/en/walkthrough.md](docs/en/walkthrough.md) |
 | Guía de uso (referencia) | [docs/es/guia.md](docs/es/guia.md) | [docs/en/guide.md](docs/en/guide.md) |
+| Notas de actualización | [docs/es/actualizar.md](docs/es/actualizar.md) | [docs/en/upgrading.md](docs/en/upgrading.md) |
 | Investigación y fundamentos del diseño | [docs/es/investigacion.md](docs/es/investigacion.md) | [docs/en/research.md](docs/en/research.md) |
 | Matriz de controles | [docs/es/controles.md](docs/es/controles.md) | [docs/en/controls.md](docs/en/controls.md) |
 | Decisiones (ADRs) | | [docs/adr/](docs/adr/README.md) |

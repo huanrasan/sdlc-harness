@@ -43,12 +43,14 @@ nav:
   - English:
       - Walkthrough: en/walkthrough.md
       - Guide: en/guide.md
+      - Upgrade notes: en/upgrading.md
       - Glossary: en/glossary.md
       - Controls matrix: en/controls.md
       - Research and rationale: en/research.md
   - Español:
       - Recorrido: es/recorrido.md
       - Guía: es/guia.md
+      - Notas de actualización: es/actualizar.md
       - Glosario: es/glosario.md
       - Matriz de controles: es/controles.md
       - Investigación y fundamentos: es/investigacion.md

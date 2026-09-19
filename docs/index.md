@@ -19,6 +19,7 @@ sdlc init path/to/your-repo --profile standard      # add --adopt for an existin
 |---|---|---|
 | Step by step | [Walkthrough](en/walkthrough.md) | [Recorrido](es/recorrido.md) |
 | Reference | [Guide](en/guide.md) | [Guía](es/guia.md) |
+| Upgrading | [Upgrade notes](en/upgrading.md) | [Notas de actualización](es/actualizar.md) |
 | Vocabulary | [Glossary](en/glossary.md) | [Glosario](es/glosario.md) |
 | Controls | [Controls matrix](en/controls.md) | [Matriz de controles](es/controles.md) |
 | Why it is built this way | [Research](en/research.md) | [Investigación](es/investigacion.md) |
