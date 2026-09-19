@@ -42,13 +42,17 @@ nav:
   - Home: index.md
   - English:
       - Walkthrough: en/walkthrough.md
+      - Playbook (phase by phase, role by role): en/playbook.md
       - Guide: en/guide.md
+      - Upgrade notes: en/upgrading.md
       - Glossary: en/glossary.md
       - Controls matrix: en/controls.md
       - Research and rationale: en/research.md
   - Español:
       - Recorrido: es/recorrido.md
+      - Manual (fase por fase, rol por rol): es/manual.md
       - Guía: es/guia.md
+      - Notas de actualización: es/actualizar.md
       - Glosario: es/glosario.md
       - Matriz de controles: es/controles.md
       - Investigación y fundamentos: es/investigacion.md

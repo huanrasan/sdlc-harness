@@ -5,6 +5,31 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-09-18
+
+### Added
+- A playbook in both languages (`docs/en/playbook.md`, `docs/es/manual.md`): the long version of the walkthrough,
+  built on the example change record. For every phase it names who acts, the exact command, why the harness asks
+  for it, the real error text when it blocks and how to get out; then one card per role, and the three situations
+  that look like failures but are not (a criterion that cannot be verified yet, an approved document that needs a
+  true addition, a risk that cannot be fixed now). Every quoted message was captured from a real run.
+- Upgrade notes in both languages (`docs/en/upgrading.md`, `docs/es/actualizar.md`): what changes for a repository
+  that already runs the harness, starting with the four things in 0.7 that can turn a pipeline red - the new
+  workflow-linting job, the Node 24 runner requirement for self-hosted runners, source globs that now match more
+  files, and the signature bundle format.
+- A test that fails when any CLI command is missing from the user documentation in either language. It found
+  `sdlc hooks`, `sdlc commit-msg` and `sdlc bundle`, undocumented since they were added.
+- A test that ties the playbook's role table to the authority matrix in the roster, so the documentation cannot
+  drift into telling a role it approves something it does not.
+
+### Changed
+- The reference guide documents `sdlc amend`, the proposal commands, `sdlc tdd --explain`, the glob semantics, the
+  workflow-linting job, the `scripts/build-release` contract, `[release] sbom_source` and the single-maintainer
+  signing mode.
+- `AGENTS.md`, the shipped `docs/sdlc/README.md` and the `sdlc-verify` skill state the rules the 0.7 features
+  introduced: agents propose deviations and exceptions but never approve them, `sdlc amend` is human-only, and a
+  criterion that cannot be verified yet is `blocked`/`pending` with an owner rather than an invented result.
+
 ## [0.7.1] - 2026-09-18
 
 ### Fixed

@@ -59,6 +59,9 @@ skill performs on request):
 
 ## Upgrade
 
+Version-specific consequences, including what can turn your pipeline red, are in the
+[upgrade notes](upgrading.md). Read them before applying a minor bump.
+
 ```bash
 pipx upgrade sdlc-harness            # or download the new sdlc-full.pyz
 sdlc upgrade --dry-run               # review
@@ -136,7 +139,22 @@ git add docs/changes/<id> && git commit -m "docs: approve spec" && git push
 # then submit an approving review on the pull request
 ```
 
-The receipt stores the SHA-256 of the artifact. Editing the artifact afterwards invalidates the approval.
+The receipt stores the SHA-256 of the artifact. Editing the artifact afterwards invalidates the approval; the
+approver reviews what changed and re-approves in one step, which is what keeps documents honest:
+
+```bash
+python3 .harness/sdlc.pyz amend <id> release.md --as rita --role release-manager   # human only, needs a terminal
+```
+
+`amend` prints the diff between the approved content, recovered from git by its hash, and the file as it stands, and
+records a fresh receipt once the approver types `yes`. It refuses to run when standard input is not a terminal, so an
+agent cannot use it. Never omit true information from an approved artifact to protect its receipt: add the published
+digests to `release.md` and amend.
+
+With `separation_of_duties = false` in `.harness/roster.toml`, for a repository with a single maintainer who cannot
+approve their own pull request, a commit signature the platform verifies replaces the platform review: the receipt
+must arrive in a commit signed by the approver, with the signing key registered on the platform. See the
+[upgrade notes](upgrading.md#if-you-are-the-only-maintainer-turn-on-commit-signing) for the one-time setup.
 In CI, `sdlc approvals verify` confirms with the GitHub or GitLab API that the named person approved a commit containing
 that exact content and the receipt, belongs to the role (directly or via a team), and, with `separation_of_duties`,
 did not author the pull request or the artifact. Every change also keeps a hash-chained `audit.jsonl`; CI rejects
@@ -190,6 +208,19 @@ agents_md_lines = ["Never run `sdlc approve`"]
 A justified exception goes in `.harness/deviations.toml` with `policy` (the key printed by `check`), `reason`,
 `approver`, `role` (allowed by roster `[authority] deviation`) and `expires`. Expired deviations fail; unused ones warn.
 
+Agents may write the proposal but never the approval, so the two halves are separate commands:
+
+```bash
+sdlc deviation propose sensors.test_first --reason "legacy module, ISSUE-42 adds tests" --days 60   # agent
+sdlc deviation approve sensors.test_first --as ana --role architect                                 # human only
+sdlc exception propose semgrep.eval-detected "tools/legacy/*.py" --reason "fixed allowlist"         # agent
+sdlc exception approve semgrep.eval-detected "tools/legacy/*.py" --as sam --role security           # human only
+```
+
+`propose` writes the entry with an empty approver and an expiry. Until someone authorized approves it, it suppresses
+nothing and `sdlc check` lists it as pending with the exact command to confirm it. This is what keeps accepted risk
+out of prose, where nothing makes it expire.
+
 ## Memory and MCP
 
 `sdlc memory add --type decision|lesson|convention|pitfall|glossary --title ... --tags ... --body ...` writes a reviewed
@@ -224,6 +255,18 @@ Formats: `--format md|json|html` and `--output <file>`. `.github/workflows/sdlc-
 | Contracts (`sdlc contracts`) | no breaking change in `[contracts] files` (OpenAPI 3.x, AsyncAPI 2.x/3.x) unless `info.version` major increases | major version bump |
 | Evidence (`sdlc evidence check`) | required SARIF/SBOM files present; no finding at or above `[evidence] fail_on`; no denied licenses | `.harness/exceptions.toml` entry with reason, approver and expiry |
 
+Which files each sensor looks at comes from `tdd.test_globs` and `tdd.source_globs` in `harness.toml`, using git
+glob semantics: `**` spans any number of directories including none, `*` and `?` stay inside one path segment. A file
+outside both lists is classified `other` and no sensor looks at it, which is invisible until it matters, so check it:
+
+```bash
+python3 .harness/sdlc.pyz tdd --explain     # classification of every tracked file, and a warning for missed code
+```
+
+The `workflows` CI job runs actionlint (syntax, expressions and shellcheck over every `run:` block) and zizmor
+(credential persistence, injection, excessive permissions). The harness requires actions pinned by commit SHA and no
+interpolation of untrusted context into `run:` blocks; those two linters are what verifies it.
+
 Scanners are replaceable: anything that writes SARIF (`sdlc-evidence/<kind>.sarif`) or CycloneDX JSON
 (`sdlc-evidence/sbom*.json`) works. The `sensors` CI job ships with gitleaks, Semgrep, Trivy, Syft and Checkov
 containers; pin them by digest and mirror them for private or air-gapped CI.
@@ -233,6 +276,15 @@ containers; pin them by digest and mirror them for private or air-gapped CI.
 Tagging `v*` runs `.github/workflows/sdlc-release.yml` (or the GitLab `release-*` jobs): gates on the tagged commit,
 your `scripts/build-release`, a CycloneDX SBOM checked against the license policy, SLSA build provenance and SBOM
 attestations, keyless Sigstore signatures and the release itself, behind a protected `production` environment.
+
+The build contract: `scripts/build-release` is executable, takes no arguments, and leaves everything to be published
+in `dist/`. Provenance, signatures and the release are produced from `dist/*`, so anything written elsewhere is
+neither signed nor published. Set `[release] sbom_source` in `harness.toml` to match what you ship: `dir:dist`
+inventories files, while a container release needs `docker-archive:dist/<image>.tar` (or `oci-archive:`) - scanning a
+saved image as a directory produces an SBOM of the tarball and the license policy then checks nothing.
+
+Signing passes `--new-bundle-format`, the current Sigstore bundle. cosign 3 verifies it with the recipe in the
+workflow header; cosign 2.x needs the same flag on `verify-blob`.
 
 ## How it works
 

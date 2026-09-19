@@ -14,6 +14,9 @@ encadenado por hash. No se escribió a mano para la documentación: se creó con
 aprobó con `sdlc approve`, y todas las compuertas pasaron (`sdlc check`: 0 errores). Leerlo es la forma más rápida de
 ver cuánto detalle necesita de verdad cada artefacto.
 
+For a step-by-step guide built on this example - every phase, every role, the real gate errors and how to get out
+of them - read the [playbook](../en/playbook.md) ([manual en español](../es/manual.md)).
+
 ## What to look at first
 
 | File | Why it is worth reading |

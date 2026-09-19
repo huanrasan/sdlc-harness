@@ -7,7 +7,8 @@ LINK_RE = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 HEADING_RE = re.compile(r"^#{1,6}\s+(.*?)\s*$", re.M)
 MERMAID_RE = re.compile(r"```mermaid\n(.*?)```", re.S)
 DOC_PAIRS = {"guide.md": "guia.md", "research.md": "investigacion.md", "controls.md": "controles.md",
-             "walkthrough.md": "recorrido.md", "glossary.md": "glosario.md"}
+             "walkthrough.md": "recorrido.md", "glossary.md": "glosario.md", "upgrading.md": "actualizar.md",
+             "playbook.md": "manual.md"}
 
 
 def markdown_files():
@@ -53,6 +54,46 @@ class DocLinkTests(unittest.TestCase):
         extra_en = {f.name for f in (ROOT / "docs/en").glob("*.md")} - set(DOC_PAIRS)
         extra_es = {f.name for f in (ROOT / "docs/es").glob("*.md")} - set(DOC_PAIRS.values())
         self.assertEqual((extra_en, extra_es), (set(), set()), "add the counterpart and register it in DOC_PAIRS")
+
+    def test_every_cli_command_is_documented_for_users(self):
+        """A command nobody can find is a command that does not exist. Applies to both languages."""
+        import argparse
+
+        from sdlc_harness import cli
+        commands = set()
+        for action in cli.build_parser()._actions:
+            if isinstance(action, argparse._SubParsersAction):
+                commands |= set(action.choices)
+        english = "\n".join((ROOT / f"docs/en/{n}").read_text()
+                             for n in ("walkthrough.md", "guide.md", "upgrading.md"))
+        spanish = "\n".join((ROOT / f"docs/es/{n}").read_text()
+                             for n in ("recorrido.md", "guia.md", "actualizar.md"))
+        for command in sorted(commands):
+            for language, text in (("English", english), ("Spanish", spanish)):
+                self.assertIn(f"sdlc {command}", text,
+                              f"`sdlc {command}` is not documented in the {language} user docs")
+
+    def test_playbook_role_table_matches_the_authority_matrix(self):
+        """The playbook tells each role what they approve; drifting from the roster would mislead every reader."""
+        import re
+        import tomllib
+
+        roster = tomllib.loads((ROOT / "src/sdlc_harness/template/.harness/roster.toml").read_text())
+        authority = roster["authority"]
+        for name in ("en/playbook.md", "es/manual.md"):
+            text = (ROOT / f"docs/{name}").read_text()
+            rows = [r for r in text.splitlines() if r.startswith("| `") and r.count("|") >= 4]
+            checked = 0
+            for row in rows:
+                role = row.split("|")[1].strip().strip("`")
+                if role not in roster["roles"]:
+                    continue
+                for artifact in re.findall(r"`([a-z-]+\.md)`", row.split("|")[2]):
+                    self.assertIn(artifact, authority, f"{name}: unknown artifact {artifact}")
+                    self.assertIn(role, authority[artifact],
+                                  f"{name}: says {role} approves {artifact}, the roster does not")
+                    checked += 1
+            self.assertGreater(checked, 10, f"{name}: the role table was not found")
 
     def test_mermaid_blocks_are_closed_and_typed(self):
         types = ("flowchart", "stateDiagram-v2", "sequenceDiagram", "graph", "erDiagram", "gantt")

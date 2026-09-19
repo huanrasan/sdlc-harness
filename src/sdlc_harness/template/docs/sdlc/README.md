@@ -20,6 +20,8 @@ flowchart LR
 
 Phases: `discover → spec → design → plan → implement → verify → review → release → operate → done`.
 `sdlc new` starts at the first phase this repository's profile requires, so small fixes start at `spec`.
+`sdlc status` shows what blocks each change and the exact next command; `sdlc explain "<message>"` explains
+any gate error, artifact, phase or role.
 
 ## Everyday commands
 
@@ -57,7 +59,15 @@ PY
 ## Rules that protect the process
 
 - Agents never approve, never edit `approvals.toml` or `audit.jsonl`, and never weaken tests or gates.
-- Any edit to an approved artifact invalidates its approval; approve the new content again.
+- Any edit to an approved artifact invalidates its approval. The approver reads the diff and re-approves in one step
+  with `sdlc amend <id> <artifact> --as <user> --role <role>`, which needs a terminal, so an agent cannot run it.
+  Never leave true information out of an approved document to keep its receipt valid.
 - Exceptions to security findings (`.harness/exceptions.toml`) and deviations from organization policy
-  (`.harness/deviations.toml`) need a named approver and an expiry date.
+  (`.harness/deviations.toml`) need a named approver and an expiry date. An agent proposes them with
+  `sdlc exception propose` or `sdlc deviation propose`; they suppress nothing until a human runs the matching
+  `approve`.
+- A criterion that honestly cannot be verified yet is `blocked` or `pending` in `verification.md` with an owner and a
+  reason. The gate stays red, but the record stays true.
+- With one maintainer, set `separation_of_duties = false` and sign your commits: GitHub does not allow approving your
+  own pull request, so the receipt is proven by a commit signature the platform verifies.
 - When a gate blocks, fix the evidence or ask the human whose approval is missing; never bypass hooks or CI.

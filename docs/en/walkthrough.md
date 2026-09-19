@@ -3,6 +3,7 @@
 > Versión en español: [../es/recorrido.md](../es/recorrido.md)
 > Reference: [guide](guide.md) · [glossary](glossary.md) · [controls matrix](controls.md) · [decisions](../adr/README.md)
 > A finished change record produced with the harness: [example](../examples/README.md)
+> The same trip in full detail, phase by phase and role by role: [playbook](playbook.md)
 
 This page follows one change from idea to production with the commands, who runs each one, and what happens when a
 gate blocks. The running example is a booking web app for appointment-based businesses.
@@ -358,6 +359,9 @@ chains and platform approvals, and those edits fail louder.
 | `sdlc codeowners [--check]` | human, CI | CODEOWNERS from the roster |
 | `sdlc audit verify [--base <ref>]` | CI | audit log integrity |
 | `sdlc mcp [--print-config <client>]` | agent setup | harness tools over MCP |
+| `sdlc hooks` | human | install the git hooks (pre-commit gates, commit message check) |
+| `sdlc commit-msg <file>` | git hook, CI | validate one commit message (Conventional Commits and trailers) |
+| `sdlc bundle --output <file> [--full]` | human | build a single-file CLI; `--full` includes the templates, so it can install and upgrade |
 
 ## 9. Rollout advice
 

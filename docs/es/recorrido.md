@@ -3,6 +3,7 @@
 > English version: [../en/walkthrough.md](../en/walkthrough.md)
 > Referencia: [guía](guia.md) · [glosario](glosario.md) · [matriz de controles](controles.md) · [decisiones](../adr/README.md)
 > Un change record terminado, producido con el arnés: [ejemplo](../examples/README.md)
+> El mismo recorrido en detalle, fase por fase y rol por rol: [manual](manual.md)
 
 Esta página sigue un cambio desde la idea hasta producción, con los comandos, quién ejecuta cada uno y qué hacer cuando
 una compuerta bloquea. El ejemplo que usamos es una app web de reservas para negocios que trabajan con citas.
@@ -366,6 +367,9 @@ cadenas y aprobaciones de la plataforma, así que esas ediciones fallan de forma
 | `sdlc codeowners [--check]` | persona, CI | CODEOWNERS desde el roster |
 | `sdlc audit verify [--base <ref>]` | CI | integridad del log de auditoría |
 | `sdlc mcp [--print-config <cliente>]` | configuración del agente | herramientas del arnés por MCP |
+| `sdlc hooks` | persona | instala los git hooks (compuertas en pre-commit, chequeo del mensaje de commit) |
+| `sdlc commit-msg <archivo>` | git hook, CI | valida un mensaje de commit (Conventional Commits y trailers) |
+| `sdlc bundle --output <archivo> [--full]` | persona | genera una CLI de un solo archivo; `--full` incluye las plantillas, así puede instalar y actualizar |
 
 ## 9. Recomendaciones de adopción
 
