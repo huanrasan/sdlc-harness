@@ -83,6 +83,29 @@ de autenticación con el mismo contenido no sirve; la API las reporta por separa
 Si son más de una persona, dejá `separation_of_duties = true`, que sigue siendo el valor por defecto y sigue
 exigiendo la revisión.
 
+**Después elegí cómo se mergean los pull requests, porque uno de los métodos tira la firma.** El *Rebase and merge*
+de GitHub reescribe cada commit sobre `main`, y los commits reescritos quedan sin firma. La compuerta del arnés no se
+ve afectada —verifica la firma dentro del pull request, y los commits originales firmados quedan asociados al pull
+request en GitHub—, pero `main` deja de mostrar quién firmó cada aprobación, y una auditoría que lea solo `main` no
+encuentra nada. Qué deja cada método en `main`:
+
+| Método | Firma en `main` | Historial |
+|---|---|---|
+| Rebase and merge | ninguna | lineal |
+| Squash and merge | la clave de GitHub, con vos como autor | lineal, un commit por pull request |
+| Create a merge commit | **la tuya, en cada commit original** | con commits de merge |
+
+Y convertí la elección en configuración, en vez de algo que hay que recordar en cada pull request:
+
+1. En Settings → General, desactivá **Allow rebase merging**.
+2. En la protección de rama de `main`, activá **Require signed commits**. GitHub rechaza entonces cualquier cosa sin
+   firmar que llegue a `main`. El squash y los merge commits los firma GitHub, igual que los de Dependabot, así que
+   siguen pasando.
+
+Si `main` además tiene **Require linear history**, los merge commits se rechazan y el squash es el único método que
+queda que mantiene `main` firmado. Es una combinación sólida: la firma propia de quien aprueba se verificó en el pull
+request, y ahí queda.
+
 ### Lo que ganás
 
 - **`sdlc amend <cambio> <artefacto> --as <usuario> --role <rol>`** le muestra a quien aprobó qué cambió desde su

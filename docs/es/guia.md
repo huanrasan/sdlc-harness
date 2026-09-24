@@ -159,7 +159,8 @@ Con `separation_of_duties = false` en `.harness/roster.toml`, para un repositori
 mantiene y no puede aprobar su propio pull request, una firma de commit que la plataforma verifica reemplaza esa
 revisión: el recibo tiene que llegar en un commit firmado por quien aprueba, con la clave de firma registrada en la
 plataforma. La configuración inicial está en las
-[notas de actualización](actualizar.md#si-sos-la-única-persona-que-mantiene-el-repositorio-activá-la-firma-de-commits).
+[notas de actualización](actualizar.md#si-sos-la-única-persona-que-mantiene-el-repositorio-activá-la-firma-de-commits),
+incluido por qué hay que desactivar el rebase merge: reescribe los commits firmados como commits sin firma en `main`.
 
 En CI,
 `sdlc approvals verify` confirma con la API de GitHub o GitLab que la persona indicada aprobó un commit que contiene
