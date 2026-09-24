@@ -5,6 +5,7 @@ They validate structure and cross-references deterministically; judging quality 
 """
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -186,15 +187,30 @@ def _evidence_token_problem(token: str, test_files: list[str], root: Path) -> st
             f"(write a command as `$ {token}` if that is what it is)")
 
 
+# Dependency and tooling trees never hold the project's own tests; reading them would let an invented test name
+# "exist" because some installed package happens to contain the string.
+NOT_TEST_DIRS = {".git", "node_modules", ".venv", "venv", "__pycache__"}
+
+
 def _test_files(ctx: Context) -> list[str] | None:
+    """Contents of the files matched by verification.test_paths, with the same git-style globs as `tdd`.
+
+    pathlib's own glob is not used: before Python 3.13, `tests/**` matches only directories, so on 3.11 and 3.12
+    every cited test name was reported missing.
+    """
     globs = ctx.cfg.get("verification", {}).get("test_paths", [])
     if not globs:
         return None
+    from .tdd import _pattern  # one glob dialect for the whole harness
+    patterns = [_pattern(g) for g in globs]
     contents = []
-    for pattern in globs:
-        for f in ctx.root.glob(pattern):
-            if f.is_file():
-                contents.append(f.read_text(encoding="utf-8", errors="ignore"))
+    for directory, subdirs, files in os.walk(ctx.root):
+        subdirs[:] = sorted(d for d in subdirs if d not in NOT_TEST_DIRS)
+        for name in sorted(files):
+            path = Path(directory, name)
+            rel = path.relative_to(ctx.root).as_posix()
+            if any(p.match(rel) for p in patterns):
+                contents.append(path.read_text(encoding="utf-8", errors="ignore"))
     return contents
 
 

@@ -19,6 +19,11 @@ From a second round of field feedback. Each fix removes a reason to write worse 
 - `sdlc tdd --explain` truncated its listing ("... and 14 more"), which hid exactly the files someone needed. It now
   prints everything, and `sdlc tdd --explain <path> ...` answers for specific files, naming the glob that decided
   each one.
+- `verification.test_paths` used pathlib's glob, where `tests/**` matches only directories before Python 3.13.
+  On 3.11 and 3.12 no test file was read and every cited test name was reported missing. It now uses the same
+  git-style matcher as `tdd`, so one glob dialect covers the whole harness on every supported Python, and it skips
+  `node_modules`, virtual environments and `.git`, where a string match would let an invented test name "exist".
+  Found by the 3.11 CI job; the suite now also runs on 3.12 locally before release.
 - The Given/When/Then check only knew English keywords while the skills tell teams to write prose in their own
   language, so every Spanish criterion produced a warning. `Dado/Cuando/Entonces` and `debe` now count.
 
