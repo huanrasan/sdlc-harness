@@ -129,9 +129,13 @@ def main() -> int:
         if not out.exists():
             print(f"{out} does not exist; run scripts/record_demo.py")
             return 1
-        before, after = out.read_text(encoding="utf-8").count("<text"), svg.count("<text")
+        recorded = out.read_text(encoding="utf-8")
+        before, after = recorded.count("<text"), svg.count("<text")
         if before != after:
             print(f"recording changed ({before} -> {after} lines); run scripts/record_demo.py")
+            return 1
+        if f"sdlc-harness {__version__} " not in recorded:  # a line count does not notice a stale title
+            print(f"recording shows an older version than {__version__}; run scripts/record_demo.py")
             return 1
         print("demo recording up to date")
         return 0

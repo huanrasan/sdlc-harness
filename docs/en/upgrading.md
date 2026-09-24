@@ -15,6 +15,14 @@ sdlc upgrade                                          # then apply
 `sdlc upgrade` needs the templates, so run it from the installed package or from `sdlc-full.pyz`. The
 `.harness/sdlc.pyz` inside your repository ships without them on purpose: it runs the gates, it does not install.
 
+## 0.7.4 to 0.7.5
+
+**Expect the `.sdlc-new` files one last time.** Before 0.7.5, merging a `.sdlc-new` and deleting it did not stick:
+the upgrade kept the previous template as the merge base, so every later upgrade offered the same files again, even
+when the release had not touched them. Your manifest still holds those old bases, so this upgrade offers your
+customized files once more. Keep your version (or merge, if the template really changed), delete the `.sdlc-new`
+files, and from then on a file is only offered when its template actually changes.
+
 ## 0.7.2 to 0.7.3
 
 Nothing that passed before can fail now: the evidence check tries the old rule first. What changes is what you no

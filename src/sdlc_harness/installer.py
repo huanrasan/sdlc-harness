@@ -282,10 +282,13 @@ def upgrade(root: Path, dry_run: bool = False) -> int:
             actions.append(f"updated: {rel}")
         elif rel in base and base[rel] == new_hash:
             new_manifest[rel] = base[rel]
+            if path.with_name(path.name + ".sdlc-new").exists():
+                report.warn(f"customized: {rel}.sdlc-new is still waiting to be merged; merge it and delete it")
         else:
             writes[path.with_name(path.name + ".sdlc-new")] = data
-            if rel in base:
-                new_manifest[rel] = base[rel]
+            # The version just offered becomes the merge base. Keeping the older one meant that after the team merged
+            # the .sdlc-new and deleted it, every later upgrade saw "template changed" again and offered it forever.
+            new_manifest[rel] = new_hash
             report.warn(f"customized: {rel} - new version written to {rel}.sdlc-new; merge it and delete the .sdlc-new file")
 
     for rel, old_hash in base.items():

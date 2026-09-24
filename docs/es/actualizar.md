@@ -15,6 +15,14 @@ sdlc upgrade                                          # después aplicar
 `sdlc upgrade` necesita las plantillas, así que se ejecuta desde el paquete instalado o desde `sdlc-full.pyz`. El
 `.harness/sdlc.pyz` que vive en tu repositorio viene sin ellas a propósito: corre las compuertas, no instala.
 
+## De 0.7.4 a 0.7.5
+
+**Los `.sdlc-new` van a aparecer una última vez.** Antes de 0.7.5, integrar un `.sdlc-new` y borrarlo no quedaba
+registrado: el upgrade conservaba la plantilla anterior como base del merge, así que cada upgrade siguiente volvía a
+ofrecer los mismos archivos, aunque el release no los hubiera tocado. Tu manifest todavía tiene esas bases viejas,
+así que este upgrade ofrece tus archivos personalizados una vez más. Quedate con tu versión (o integrá, si la
+plantilla cambió de verdad), borrá los `.sdlc-new`, y desde ahí un archivo solo se ofrece cuando su plantilla cambia.
+
 ## De 0.7.2 a 0.7.3
 
 Nada que pasaba antes puede fallar ahora: el chequeo de evidencia prueba primero la regla vieja. Lo que cambia es lo

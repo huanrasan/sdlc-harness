@@ -48,6 +48,29 @@ class UpgradeTests(HarnessCase):
         self.assertTrue((self.repo / (spec_tpl + ".sdlc-new")).exists())
         self.assertIn("customized: docs/sdlc/templates/spec.md", out)
 
+    def test_a_merged_sdlc_new_is_not_offered_again(self):
+        """Field bug (demo-webapp, 0.7.3 -> 0.7.4): after merging a .sdlc-new and deleting it, every later upgrade
+        offered the same file again, because the manifest kept the old template as the merge base."""
+        rel = "docs/sdlc/templates/spec.md"
+        new_template = (self.repo / rel).read_text()
+        self.simulate_old_version(rel, "old template\n")
+        (self.repo / rel).write_text("old template\ncustomized by the team\n")
+
+        code, out = self.cli("upgrade")                     # template changed: the team is shown the new version
+        self.assertIn(f"customized: {rel}", out)
+        self.assertTrue((self.repo / (rel + ".sdlc-new")).exists())
+
+        code, out = self.cli("upgrade")                     # not merged yet: keep reminding, do not re-offer
+        self.assertIn(f"{rel}.sdlc-new is still waiting to be merged", out)
+
+        (self.repo / rel).write_text(new_template + "customized by the team\n")   # the team merges it
+        (self.repo / (rel + ".sdlc-new")).unlink()
+        code, out = self.cli("upgrade")                     # same template as before: nothing to do
+        self.assertEqual(code, 0, out)
+        self.assertNotIn(rel, out)
+        self.assertFalse((self.repo / (rel + ".sdlc-new")).exists())
+        self.assertIn("customized by the team", (self.repo / rel).read_text())
+
     def test_agents_md_index_and_project_fill_handling(self):
         agents = self.repo / "AGENTS.md"
         agents.write_text(agents.read_text().replace("- Build: `<!-- sdlc:fill -->`", "- Build: `make`"))
