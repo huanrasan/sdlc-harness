@@ -84,7 +84,9 @@ flowchart TD
 ```
 
 `.harness/manifest.toml` records what was installed. Unmodified files are updated, customized files are kept, and when
-both you and the release changed a file the new version is written next to it as `<file>.sdlc-new`. `harness.toml` and
+both you and the release changed a file the new version is written next to it as `<file>.sdlc-new`. Each version is
+offered once: after you merge it and delete the `.sdlc-new`, later upgrades leave the file alone until the template
+changes again, and while the `.sdlc-new` is still there they remind you it is waiting. `harness.toml` and
 `roster.toml` only gain missing tables and keys. The vendored `.harness/sdlc.pyz` is rebuilt deterministically.
 
 ## Daily workflow

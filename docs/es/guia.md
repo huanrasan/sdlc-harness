@@ -87,6 +87,9 @@ flowchart TD
 
 `.harness/manifest.toml` registra lo instalado. Los archivos sin modificar se actualizan, los personalizados se conservan
 y, cuando tanto tú como el release cambiaron un archivo, la nueva versión se escribe al lado como `<archivo>.sdlc-new`.
+Cada versión se ofrece una sola vez: después de integrarla y borrar el `.sdlc-new`, los upgrades siguientes no
+vuelven a tocar ese archivo hasta que la plantilla cambie de nuevo, y mientras el `.sdlc-new` siga ahí te recuerdan
+que está pendiente.
 `harness.toml` y `roster.toml` solo reciben las tablas y claves que falten. El `.harness/sdlc.pyz` se regenera de forma
 determinista.
 

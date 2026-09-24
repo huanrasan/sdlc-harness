@@ -5,6 +5,18 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.5] - 2026-09-24
+
+### Fixed
+- `sdlc upgrade` offered the same `.sdlc-new` files on every run. When a customized file received a new template
+  version, the manifest kept the previous template as the merge base, so after the team merged the `.sdlc-new` and
+  deleted it, the next upgrade saw "template changed" again and offered it forever, even for releases that had not
+  touched the file. The version just offered is now recorded as the base; while its `.sdlc-new` is still on disk,
+  upgrades remind you instead of rewriting it. Found in a repository whose 0.7.3 to 0.7.4 upgrade offered four files
+  that 0.7.4 had not changed. Repositories upgraded before this fix see their customized files offered once more.
+- The README demo still showed version 0.7.0 after four releases: `record_demo.py --check` compared line
+  counts only. It now also fails when the recorded version is older than the package.
+
 ## [0.7.4] - 2026-09-24
 
 ### Added

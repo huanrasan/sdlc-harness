@@ -7,7 +7,7 @@ Codex, GitHub Copilot, Cursor, Gemini CLI, Windsurf, OpenCode...) the same guide
 gates, from specification to operation, with controls that scale from a solo developer to a regulated organization.
 Stack- and cloud-agnostic: public cloud, private cloud, on-prem or air-gapped.
 
-**Status:** v0.7.4, early preview.
+**Status:** v0.7.5, early preview.
 
 ## Why
 
@@ -66,7 +66,7 @@ evidence, and the next phase does not start until the gate passes and the requir
 ## Quick start
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.4
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.5
 sdlc init ../my-service --interactive           # guided setup; add --adopt for an existing repository
 cd ../my-service
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor

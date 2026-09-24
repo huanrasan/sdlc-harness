@@ -1,6 +1,6 @@
 {
   "name": "sdlc-harness",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "Agent-agnostic SDLC harness: skills for discovery to retirement, change records, human approvals, deterministic gates and sensors.",
   "contextFileName": "distribution/extension-context.md"
 }
