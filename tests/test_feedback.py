@@ -194,6 +194,74 @@ class ProposalTests(HarnessCase):
         self.assertIn("--reason is required", out)
 
 
+
+class EvidenceTokenTests(HarnessCase):
+    """Backticked evidence used to be read as test names only, so commands and paths failed the gate and pushed
+    people to drop the formatting (second field feedback). Test names can be sentences, so whitespace is no clue."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        (self.repo / "tests").mkdir()
+        (self.repo / "tests/test_export.py").write_text(
+            "def test_export_returns_csv():\n    pass\n\n# it('responde 200 con db ok en menos de 500 ms')\n")
+        (self.repo / "src").mkdir()
+        (self.repo / "src/export.py").write_text("x = 1\n")
+        cfg = self.repo / "harness.toml"
+        cfg.write_text(re.sub(r"(?m)^test_paths = .*$", 'test_paths = ["tests/**"]', cfg.read_text(), count=1))
+
+    def problem(self, token: str):
+        from sdlc_harness.core import load_config
+        ctx = gates.Context(self.repo, self.repo, load_config(self.repo), {})
+        return gates._evidence_token_problem(token, gates._test_files(ctx), self.repo)
+
+    def test_test_names_are_still_verified_including_sentences(self):
+        self.assertIsNone(self.problem("test_export_returns_csv"))
+        self.assertIsNone(self.problem("responde 200 con db ok en menos de 500 ms"))
+        self.assertIn("cites test `test_that_nobody_wrote` not found", self.problem("test_that_nobody_wrote"))
+        self.assertIn("not a test", self.problem("responde 418 cuando es una tetera"))
+
+    def test_a_command_is_marked_with_a_dollar_sign(self):
+        self.assertIsNone(self.problem("$ pytest -k export"))
+        self.assertIn("write a command as `$ sdlc tdd --explain`", self.problem("sdlc tdd --explain"))
+
+    def test_paths_must_exist(self):
+        self.assertIsNone(self.problem("src/export.py"))
+        self.assertIsNone(self.problem("src/export.py:1"))
+        self.assertIn("does not exist", self.problem("src/deleted_component.py"))
+
+    def test_pytest_node_ids_check_both_halves(self):
+        self.assertIsNone(self.problem("tests/test_export.py::test_export_returns_csv"))
+        self.assertIn("not found", self.problem("tests/test_export.py::test_invented"))
+        self.assertIn("does not exist", self.problem("tests/test_gone.py::test_export_returns_csv"))
+
+
+class CriterionLanguageTests(unittest.TestCase):
+    """The skills say to write prose in the team's language; the structure check has to agree."""
+
+    def test_spanish_given_when_then_is_recognised(self):
+        self.assertTrue(gates.CRITERION_RE.search("Dado un usuario, cuando exporta, entonces recibe un CSV"))
+        self.assertTrue(gates.CRITERION_RE.search("El sistema debe rechazar el color sin contraste"))
+        self.assertTrue(gates.CRITERION_RE.search("Given a user, when exporting, then a CSV arrives"))
+        self.assertIsNone(gates.CRITERION_RE.search("exportar reservas a CSV"))
+
+
+class TddExplainPathsTests(HarnessCase):
+    def test_explain_names_the_rule_for_specific_files_and_never_truncates(self):
+        (self.repo / "src").mkdir()
+        for i in range(30):
+            (self.repo / f"src/m{i}.py").write_text("x = 1\n")
+        (self.repo / "src/proxy.py").write_text("x = 1\n")
+        cfg = self.repo / "harness.toml"
+        cfg.write_text(cfg.read_text().replace("source_globs = []", 'source_globs = ["src/**/*.py"]'))
+        sh(self.repo, "git", "add", "-A")
+        code, out = self.cli("tdd", "--explain", "src/proxy.py", "README.md")
+        self.assertEqual(code, 0, out)
+        self.assertIn("src/proxy.py: source - matches source glob `src/**/*.py`", out)
+        self.assertIn("README.md: other", out)
+        code, out = self.cli("tdd", "--explain")
+        self.assertNotIn("more", out)
+        self.assertIn("src/m29.py", out)
+
 class StagedCheckTests(HarnessCase):
     def test_staged_only_validates_the_change_the_commit_touches(self):
         first = self.new_change(slug="one")

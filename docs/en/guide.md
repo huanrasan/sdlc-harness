@@ -261,6 +261,7 @@ outside both lists is classified `other` and no sensor looks at it, which is inv
 
 ```bash
 python3 .harness/sdlc.pyz tdd --explain     # classification of every tracked file, and a warning for missed code
+python3 .harness/sdlc.pyz tdd --explain src/proxy.ts   # one file, and the glob that decided it
 ```
 
 The `workflows` CI job runs actionlint (syntax, expressions and shellcheck over every `run:` block) and zizmor

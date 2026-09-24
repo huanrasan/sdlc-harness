@@ -56,7 +56,7 @@ todos, incluidos `plan.md`, `verification.md`, `review.md`, `ux.md`, `cost.md` y
 ## 2. Instalación por única vez — el rol `platform`
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.2
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.3
 sdlc init ruta/al/repo --interactive          # pregunta perfil, agentes, CI y roster; --adopt en un repo existente
 cd ruta/al/repo
 python3 .harness/sdlc.pyz hooks               # compuertas en pre-commit y chequeo del mensaje de commit
@@ -222,7 +222,13 @@ La vía de escape es un trailer de commit escrito por una persona, con un motivo
 configuración, comprobá qué está mirando el sensor: los archivos fuera de tus globs le son invisibles.
 
 ```bash
-python3 .harness/sdlc.pyz tdd --explain
+python3 .harness/sdlc.pyz tdd --explain                          # todos los archivos, sin ocultar nada
+python3 .harness/sdlc.pyz tdd --explain src/proxy.ts src/a.test.ts   # solo estos, y qué regla decidió
+```
+
+```
+src/proxy.ts: source - matches source glob `src/**/*.ts`
+README.md: other - matches no test glob and no source glob
 ```
 
 ### `verify` — evidencia, no afirmaciones
@@ -230,7 +236,27 @@ python3 .harness/sdlc.pyz tdd --explain
 **Quién:** el agente ejecuta todo y lo registra; `tech-lead` aprueba en `regulated`.
 
 `verification.md` registra los comandos y su salida real, una fila por criterio de aceptación, y los hallazgos de
-los escáneres con su disposición. El resultado tiene que ser `pass`, `verified` o `n/a`:
+los escáneres con su disposición. En la columna de evidencia, todo lo que va entre `comillas invertidas` se verifica,
+así que tiene que ser una de tres cosas:
+
+| Forma | Ejemplo | Qué hace la compuerta |
+|---|---|---|
+| un nombre de test — una oración sirve | `` `responde 200 con db ok en menos de 500 ms` `` | verifica que exista bajo `verification.test_paths` |
+| una ruta del repositorio | `` `src/export.ts` ``, `` `tests/test_x.py::test_y` ``, `` `src/a.ts:12` `` | verifica que el archivo exista |
+| un comando, marcado con `$ ` | `` `$ pnpm test:integration` `` | nada: un comando es tan inverificable como la prosa |
+
+Cualquier otra cosa falla, y es a propósito: así se detecta la evidencia que no apunta a nada.
+
+```
+ERROR docs/changes/<id>/verification.md: AC-2 cites `sdlc tdd --explain`, which is not a test under
+      verification.test_paths nor a file in the repository (write a command as `$ sdlc tdd --explain` if that is what it is)
+ERROR docs/changes/<id>/verification.md: AC-4 cites `src/components/OldBanner.tsx`, which does not exist in the repository
+```
+
+Marcá el comando, corregí la ruta. **No saques las comillas invertidas para pasar la compuerta**: la prosa pasa
+porque no se puede verificar, y eso deja la evidencia peor, no mejor.
+
+El resultado tiene que ser `pass`, `verified` o `n/a`:
 
 ```
 ERROR docs/changes/<id>/verification.md: AC-1 result is 'fail' (expected pass/verified/n/a, or blocked/pending with an owner and a reason)

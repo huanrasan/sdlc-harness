@@ -23,7 +23,10 @@ adr = "docs/adr"
 templates = "docs/sdlc/templates"
 
 [verification]
-# Globs of test sources. When set, test names cited in verification.md (in `backticks`) must exist there.
+# Globs of test sources. When set, every `backticked` token in a verification.md evidence cell must be one of:
+#   a test name found in these files (sentences are fine: `returns 200 when the database is up`),
+#   a path that exists in the repository (`src/export.ts`, `tests/test_x.py::test_y`, `src/a.ts:12`), or
+#   a command marked with a leading `$ ` (`$ pnpm test:integration`), which is not verified.
 test_paths = []
 
 [tdd]

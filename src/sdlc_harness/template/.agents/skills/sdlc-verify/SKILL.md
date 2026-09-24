@@ -19,6 +19,9 @@ Goal: `verification.md` containing evidence, not assertions. "Should work" is no
    `blocked - owner: rita - needs repository admin to protect the branch`. The gate stays red and the phase does not
    advance, which is correct: the point is that the record says what is true. Never write a result you did not
    observe, and never mark something `n/a` that simply has not been done.
+   In the evidence cell, put test names, file paths and commands in `backticks`; mark a command with a leading
+   `$ ` (`$ pnpm test:integration`). The gate checks that test names exist and that paths exist, which is
+   what makes the evidence trustworthy. Never remove the formatting to get past it.
 3. Run the security sensors that apply to the stack (see `references/sensors.md`) writing SARIF
    (`sdlc-evidence/<kind>.sarif`) and a CycloneDX SBOM (`sdlc-evidence/sbom.json`), then
    `python3 .harness/sdlc.pyz evidence check`. The profile lists required kinds; `harness.toml [evidence]` sets the

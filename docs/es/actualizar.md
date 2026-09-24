@@ -15,6 +15,20 @@ sdlc upgrade                                          # después aplicar
 `sdlc upgrade` necesita las plantillas, así que se ejecuta desde el paquete instalado o desde `sdlc-full.pyz`. El
 `.harness/sdlc.pyz` que vive en tu repositorio viene sin ellas a propósito: corre las compuertas, no instala.
 
+## De 0.7.2 a 0.7.3
+
+Nada que pasaba antes puede fallar ahora: el chequeo de evidencia prueba primero la regla vieja. Lo que cambia es lo
+que ya no tenés que esquivar.
+
+- **Volvé a poner las comillas invertidas.** Si reescribiste evidencia en prosa porque los comandos y las rutas entre
+  `comillas invertidas` fallaban la compuerta, restauralas. Las rutas ahora se verifican; los comandos se aceptan
+  marcados como `$ pnpm test`. Lo que no es test ni archivo y no está marcado sigue fallando, con un mensaje que
+  dice cómo marcarlo.
+- **`sdlc tdd --explain <ruta> ...`** responde por archivos concretos y nombra el glob que decidió cada uno. El
+  listado completo ya no se trunca.
+- **Los criterios en español ya no generan warning.** `Dado/Cuando/Entonces` y `debe` cuentan como criterios
+  estructurados.
+
 ## De 0.6.x a 0.7.x
 
 ### Cuatro cosas que pueden poner tu pipeline en rojo

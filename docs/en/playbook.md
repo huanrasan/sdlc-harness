@@ -53,7 +53,7 @@ nearly all of them, including `plan.md`, `verification.md`, `review.md`, `ux.md`
 ## 2. One-time setup — the platform role
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.2
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.3
 sdlc init path/to/repo --interactive          # asks profile, agents, CI, roster; --adopt for an existing repo
 cd path/to/repo
 python3 .harness/sdlc.pyz hooks               # pre-commit gates and commit-message check
@@ -219,7 +219,13 @@ The escape hatch is a commit trailer written by a human, with a reason. Before t
 what the sensor is even looking at — files outside your globs are invisible to it:
 
 ```bash
-python3 .harness/sdlc.pyz tdd --explain
+python3 .harness/sdlc.pyz tdd --explain                          # every tracked file, nothing hidden
+python3 .harness/sdlc.pyz tdd --explain src/proxy.ts src/a.test.ts   # just these, and which rule decided
+```
+
+```
+src/proxy.ts: source - matches source glob `src/**/*.ts`
+README.md: other - matches no test glob and no source glob
 ```
 
 ### `verify` — evidence, not assertions
@@ -227,7 +233,27 @@ python3 .harness/sdlc.pyz tdd --explain
 **Who:** agent runs everything and records it; `tech-lead` approves in `regulated`.
 
 `verification.md` records the commands and their real output, one row per acceptance criterion, and the scanner
-findings with their disposition. The result must be `pass`, `verified` or `n/a`:
+findings with their disposition. In the evidence column, anything in `backticks` is checked, so write it as one of
+three things:
+
+| Form | Example | What the gate does |
+|---|---|---|
+| a test name — a sentence is fine | `` `returns 200 with db ok in under 500 ms` `` | checks it exists under `verification.test_paths` |
+| a repository path | `` `src/export.ts` ``, `` `tests/test_x.py::test_y` ``, `` `src/a.ts:12` `` | checks the file exists |
+| a command, marked with `$ ` | `` `$ pnpm test:integration` `` | nothing: a command is as unverifiable as prose |
+
+Anything else fails, and that is deliberate — it is how evidence pointing at nothing gets caught:
+
+```
+ERROR docs/changes/<id>/verification.md: AC-2 cites `sdlc tdd --explain`, which is not a test under
+      verification.test_paths nor a file in the repository (write a command as `$ sdlc tdd --explain` if that is what it is)
+ERROR docs/changes/<id>/verification.md: AC-4 cites `src/components/OldBanner.tsx`, which does not exist in the repository
+```
+
+Mark the command, fix the path. **Do not drop the backticks to get past the gate**: prose passes because it cannot be
+checked, which makes the evidence worse, not better.
+
+The result must be `pass`, `verified` or `n/a`:
 
 ```
 ERROR docs/changes/<id>/verification.md: AC-1 result is 'fail' (expected pass/verified/n/a, or blocked/pending with an owner and a reason)

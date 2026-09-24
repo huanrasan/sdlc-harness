@@ -15,6 +15,18 @@ sdlc upgrade                                          # then apply
 `sdlc upgrade` needs the templates, so run it from the installed package or from `sdlc-full.pyz`. The
 `.harness/sdlc.pyz` inside your repository ships without them on purpose: it runs the gates, it does not install.
 
+## 0.7.2 to 0.7.3
+
+Nothing that passed before can fail now: the evidence check tries the old rule first. What changes is what you no
+longer have to work around.
+
+- **Put the backticks back.** If you rewrote evidence as prose because commands and paths in `backticks` failed the
+  gate, restore them. Paths are now checked to exist; commands are accepted when marked `$ pnpm test`. Unmarked
+  tokens that are neither a test nor a file still fail, with a message that says how to mark them.
+- **`sdlc tdd --explain <path> ...`** answers for specific files and names the glob that decided each one. The full
+  listing no longer truncates.
+- **Spanish criteria no longer warn.** `Dado/Cuando/Entonces` and `debe` count as structured criteria.
+
 ## 0.6.x to 0.7.x
 
 ### Four things that can turn your pipeline red

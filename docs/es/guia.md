@@ -272,6 +272,7 @@ así que conviene comprobarlo:
 
 ```bash
 python3 .harness/sdlc.pyz tdd --explain     # clasificación de cada archivo versionado, con aviso si falta código
+python3 .harness/sdlc.pyz tdd --explain src/proxy.ts   # un archivo, y el glob que lo decidió
 ```
 
 El job `workflows` de CI ejecuta actionlint (sintaxis, expresiones y shellcheck sobre cada bloque `run:`) y zizmor
