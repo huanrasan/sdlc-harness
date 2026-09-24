@@ -5,6 +5,7 @@ They validate structure and cross-references deterministically; judging quality 
 """
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +16,8 @@ AC_RE = re.compile(r"\bAC-\d+\b")
 THREAT_RE = re.compile(r"\bT-\d+\b")
 PASS_RESULTS = {"pass", "passed", "verified", "n/a"}
 OPEN_RESULTS = {"blocked", "pending"}
+# The skills tell teams to write prose in their own language, so the structure check cannot be English-only.
+CRITERION_RE = re.compile(r"\b(given|when|then|shall|dad[oa]s?|cuando|entonces|debe|deberá)\b", re.I)
 GUARDRAIL_TOPICS = [("a budget", r"budget|presupuesto"),
                     ("alert thresholds", r"alert|threshold|umbral|alarma"),
                     ("allocation tags", r"\btags?\b|etiqueta|allocation|label"),
@@ -64,8 +67,9 @@ def check_spec(text: str, rel: str, ctx: Context) -> Report:
         criterion = cell(r, "given")
         if _blank(criterion):
             report.error(f"{rel}: {cell(r, 'id')} has no Given/When/Then text")
-        elif not re.search(r"\b(given|when|then|shall)\b", criterion, re.I):
-            report.warn(f"{rel}: {cell(r, 'id')} is not written as Given/When/Then or EARS")
+        elif not CRITERION_RE.search(criterion):
+            report.warn(f"{rel}: {cell(r, 'id')} is not written as Given/When/Then or EARS "
+                         f"(Dado/Cuando/Entonces also counts)")
     for r in table_with(text, "concern"):
         if _blank(cell(r, "requirement")):
             report.error(f"{rel}: NFR '{cell(r, 'concern')}' is empty (write a number or 'n/a: reason')")
@@ -148,24 +152,65 @@ def check_verification(text: str, rel: str, ctx: Context) -> Report:
         if _blank(evidence):
             report.error(f"{rel}: {ac} has no evidence")
         elif test_files is not None:
-            for name in re.findall(r"`([^`]+)`", evidence):
-                if not any(name in content for content in test_files):
-                    report.error(f"{rel}: {ac} cites test `{name}` not found under verification.test_paths")
+            for token in re.findall(r"`([^`]+)`", evidence):
+                if problem := _evidence_token_problem(token, test_files, ctx.root):
+                    report.error(f"{rel}: {ac} {problem}")
     for r in table_with(text, "disposition"):
         if not _blank(cell(r, "finding")) and _blank(cell(r, "disposition")):
             report.error(f"{rel}: finding '{cell(r, 'finding')}' has no disposition")
     return report
 
 
+def _evidence_token_problem(token: str, test_files: list[str], root: Path) -> str | None:
+    """What is wrong with one backticked token in a verification row, or None when it checks out.
+
+    A backticked token is a test name, a repository path or a command. Test names can be whole sentences (vitest and
+    jest name tests that way), so whitespace cannot tell a command apart; a command is marked with a leading `$ `,
+    the shell convention. An unmarked token that is neither a test nor a file is the one thing this gate exists to
+    catch: evidence that points at nothing.
+    """
+    if token.startswith("$ "):
+        return None  # a command: as unverifiable as prose, and no weaker for being formatted
+    if any(token in content for content in test_files):
+        return None
+    path, _, test = token.partition("::")  # pytest node ids: tests/test_x.py::test_y
+    looks_like_path = "/" in path and not any(c.isspace() for c in path)
+    if looks_like_path or (root / path).is_file():
+        if not (root / path.split(":")[0]).exists():  # tolerate a trailing :line
+            return f"cites `{path}`, which does not exist in the repository"
+        if test and not any(test in content for content in test_files):
+            return f"cites test `{test}` in `{path}`, not found under verification.test_paths"
+        return None
+    if re.fullmatch(r"[A-Za-z_][\w.]*", token):  # an identifier is plainly meant as a test name
+        return f"cites test `{token}` not found under verification.test_paths"
+    return (f"cites `{token}`, which is not a test under verification.test_paths nor a file in the repository "
+            f"(write a command as `$ {token}` if that is what it is)")
+
+
+# Dependency and tooling trees never hold the project's own tests; reading them would let an invented test name
+# "exist" because some installed package happens to contain the string.
+NOT_TEST_DIRS = {".git", "node_modules", ".venv", "venv", "__pycache__"}
+
+
 def _test_files(ctx: Context) -> list[str] | None:
+    """Contents of the files matched by verification.test_paths, with the same git-style globs as `tdd`.
+
+    pathlib's own glob is not used: before Python 3.13, `tests/**` matches only directories, so on 3.11 and 3.12
+    every cited test name was reported missing.
+    """
     globs = ctx.cfg.get("verification", {}).get("test_paths", [])
     if not globs:
         return None
+    from .tdd import _pattern  # one glob dialect for the whole harness
+    patterns = [_pattern(g) for g in globs]
     contents = []
-    for pattern in globs:
-        for f in ctx.root.glob(pattern):
-            if f.is_file():
-                contents.append(f.read_text(encoding="utf-8", errors="ignore"))
+    for directory, subdirs, files in os.walk(ctx.root):
+        subdirs[:] = sorted(d for d in subdirs if d not in NOT_TEST_DIRS)
+        for name in sorted(files):
+            path = Path(directory, name)
+            rel = path.relative_to(ctx.root).as_posix()
+            if any(p.match(rel) for p in patterns):
+                contents.append(path.read_text(encoding="utf-8", errors="ignore"))
     return contents
 
 

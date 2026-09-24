@@ -14,6 +14,10 @@ Result is `pass`, `verified` or `n/a`. Use `blocked` or `pending` when a criteri
 it must then name who owns it and why, as in `blocked - owner: rita - needs repository admin to protect the branch`.
 The gate stays red (verify does not close) but the record says what is true.
 
+In the evidence column, `backticks` hold a test name (a sentence is fine), a repository path, or a command
+written as `$ pnpm test:integration`. An unmarked token that is neither a test nor a file fails the gate:
+that is how invented evidence is caught, so mark commands rather than dropping the formatting.
+
 ## Security and quality sensors
 | Sensor | Tool | Result | Findings |
 |---|---|---|---|

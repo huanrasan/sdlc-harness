@@ -8,7 +8,7 @@ las mismas compuertas deterministas, desde la especificación hasta la operació
 desarrollador individual hasta una organización regulada. No depende del stack ni de la nube: funciona en nube
 pública, nube privada, on-prem o entornos air-gapped.
 
-**Estado:** v0.7.2, versión preliminar.
+**Estado:** v0.7.3, versión preliminar.
 
 ## Por qué
 
@@ -70,7 +70,7 @@ y la siguiente no empieza hasta que la compuerta pasa y la persona correspondien
 ## Inicio rápido
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.2
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.3
 sdlc init ../mi-servicio --interactive           # instalación guiada; agregá --adopt en un repo existente
 cd ../mi-servicio
 python3 .harness/sdlc.pyz hooks && python3 .harness/sdlc.pyz doctor

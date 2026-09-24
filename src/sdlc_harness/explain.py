@@ -81,6 +81,14 @@ ERROR_DOC = [
      "Commit and push the receipt first, then submit the approving review."),
     (r"separation of duties", "The approver also authored the change.",
      "Have another role holder approve, or set separation_of_duties = false in .harness/roster.toml for solo work."),
+    (r"which is not a test under verification\.test_paths nor a file",
+     "A backticked token in the evidence matches no test and no file, so the gate cannot tell it from invented "
+     "evidence.",
+     "If it is a test, check the exact name in the test file. If it is a command, write it as `$ <command>`. If it "
+     "is a file, check the path. Do not drop the backticks to get past the gate."),
+    (r"which does not exist in the repository",
+     "The evidence cites a file that is not in the repository, often one renamed or deleted after it was written.",
+     "Point at the file that exists now, or remove the reference if the evidence changed."),
     (r"must have a signature the platform verifies",
      "With separation_of_duties = false the receipt stands in for a platform review, so it must arrive in a signed "
      "commit: otherwise it is only a file the author wrote.",

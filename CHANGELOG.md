@@ -5,6 +5,28 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-09-24
+
+From a second round of field feedback. Each fix removes a reason to write worse documentation to get past a gate.
+
+### Fixed
+- `verification.md` evidence: every token in `backticks` was treated as a test name, so commands and paths failed
+  and pushed people to rewrite evidence as unformatted prose. A token is now a test name (sentences included, as
+  vitest and jest name tests), a repository path that must exist (with `::test` or `:line` suffixes), or a command
+  marked with a leading `$ `. Whitespace could not be the rule: in a real repository all 24 test names were
+  sentences, and treating them as commands would have silently disabled the check. The old rule runs first, so
+  nothing that passed before can fail now.
+- `sdlc tdd --explain` truncated its listing ("... and 14 more"), which hid exactly the files someone needed. It now
+  prints everything, and `sdlc tdd --explain <path> ...` answers for specific files, naming the glob that decided
+  each one.
+- `verification.test_paths` used pathlib's glob, where `tests/**` matches only directories before Python 3.13.
+  On 3.11 and 3.12 no test file was read and every cited test name was reported missing. It now uses the same
+  git-style matcher as `tdd`, so one glob dialect covers the whole harness on every supported Python, and it skips
+  `node_modules`, virtual environments and `.git`, where a string match would let an invented test name "exist".
+  Found by the 3.11 CI job; the suite now also runs on 3.12 locally before release.
+- The Given/When/Then check only knew English keywords while the skills tell teams to write prose in their own
+  language, so every Spanish criterion produced a warning. `Dado/Cuando/Entonces` and `debe` now count.
+
 ## [0.7.2] - 2026-09-18
 
 ### Added

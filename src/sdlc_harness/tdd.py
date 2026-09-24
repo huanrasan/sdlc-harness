@@ -60,15 +60,25 @@ def _match(path: str, globs: list[str]) -> bool:
 
 def classify(path: str, cfg: dict) -> str:
     """'test', 'source' or 'other'."""
+    return why(path, cfg)[0]
+
+
+def why(path: str, cfg: dict) -> tuple[str, str]:
+    """(classification, the rule that decided it) - so the answer can be explained, not just stated."""
     tdd_cfg = cfg.get("tdd", {})
     if path.startswith(IGNORED_PREFIXES):
-        return "other"
-    if _match(path, tdd_cfg.get("test_globs") or DEFAULT_TEST_GLOBS):
-        return "test"
+        return "other", "under docs/ or a harness directory, never considered"
+    test_globs = tdd_cfg.get("test_globs") or DEFAULT_TEST_GLOBS
+    if hit := next((g for g in test_globs if _pattern(g).match(path)), None):
+        return "test", f"matches test glob `{hit}`"
     source_globs = tdd_cfg.get("source_globs") or []
     if source_globs:
-        return "source" if _match(path, source_globs) else "other"
-    return "source" if Path(path).suffix in CODE_EXTENSIONS else "other"
+        if hit := next((g for g in source_globs if _pattern(g).match(path)), None):
+            return "source", f"matches source glob `{hit}`"
+        return "other", "matches no test glob and no source glob"
+    if Path(path).suffix in CODE_EXTENSIONS:
+        return "source", f"source_globs is empty and `{Path(path).suffix}` is a code extension"
+    return "other", "source_globs is empty and the extension is not code"
 
 
 def _commits(root: Path, base: str) -> list[tuple[str, str]]:
@@ -142,29 +152,38 @@ def _diff_names(root: Path, base: str) -> list[tuple[str, str]]:
     return rows
 
 
-def explain(root: Path, cfg: dict) -> Report:
-    """Print how every tracked file is classified, so silent misconfiguration is visible before it matters."""
+def explain(root: Path, cfg: dict, paths: list[str] | None = None) -> Report:
+    """Show how files are classified and which rule decided it, so misconfiguration is visible before it matters.
+
+    Nothing is truncated: a command whose purpose is to explain must not hide part of the answer.
+    """
     report = Report()
     tdd_cfg = cfg.get("tdd", {})
     test_globs = tdd_cfg.get("test_globs") or DEFAULT_TEST_GLOBS
     source_globs = tdd_cfg.get("source_globs") or []
-    buckets: dict[str, list[str]] = {"test": [], "source": [], "other": []}
-    for path in git(root, "ls-files").splitlines():
-        buckets[classify(path, cfg)].append(path)
+    if paths:
+        tracked = set(git(root, "ls-files").splitlines())
+        for path in paths:
+            kind, reason = why(path, cfg)
+            note = "" if path in tracked else "  (not tracked by git: the sensors only see committed files)"
+            print(f"{path}: {kind} - {reason}{note}")
+        return report
     print(f"test_globs   = {test_globs}{' (default)' if not tdd_cfg.get('test_globs') else ''}")
     print(f"source_globs = {source_globs or 'unset: any file with a known code extension counts as source'}")
-    ignored = [p for p in buckets["other"] if p.startswith(IGNORED_PREFIXES)]
-    buckets["other"] = [p for p in buckets["other"] if not p.startswith(IGNORED_PREFIXES)]
+    buckets: dict[str, list[str]] = {"test": [], "source": [], "other": []}
+    ignored = 0
+    for path in git(root, "ls-files").splitlines():
+        if path.startswith(IGNORED_PREFIXES):
+            ignored += 1
+            continue
+        buckets[classify(path, cfg)].append(path)
     for kind in ("test", "source", "other"):
-        files = buckets[kind]
-        print(f"\n{kind} ({len(files)})")
-        for path in files[:20]:
+        print(f"\n{kind} ({len(buckets[kind])})")
+        for path in buckets[kind]:
             print(f"  {path}")
-        if len(files) > 20:
-            print(f"  ... and {len(files) - 20} more")
-    print(f"\nnot considered: {len(ignored)} file(s) under docs/ and harness directories")
-    missed = [p for p in buckets["other"]
-              if Path(p).suffix in CODE_EXTENSIONS and not p.startswith(IGNORED_PREFIXES)]
+    print(f"\nnot considered: {ignored} file(s) under docs/ and harness directories")
+    print("ask about specific files, with the rule that decided each one: sdlc tdd --explain <path> [<path> ...]")
+    missed = [p for p in buckets["other"] if Path(p).suffix in CODE_EXTENSIONS]
     if missed and source_globs:
         report.warn(f"{len(missed)} file(s) with a code extension are classified 'other', so the test-first sensor "
                     f"ignores them (e.g. {missed[0]}); widen tdd.source_globs in harness.toml")

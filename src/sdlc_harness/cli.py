@@ -233,6 +233,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("tdd", help="test-first ordering and weakened tests over base..HEAD")
     p.add_argument("--base")
     p.add_argument("--explain", action="store_true", help="show how each tracked file is classified and exit")
+    p.add_argument("paths", nargs="*", help="with --explain: only these files, with the rule that decided each")
 
     sub.add_parser("arch", help="check layer dependencies from .harness/architecture.toml")
 
@@ -376,7 +377,7 @@ def main(argv: list[str] | None = None) -> int:
         case "tdd":
             cfg = load_config(root)
             if args.explain:
-                return tdd.explain(root, cfg).print()
+                return tdd.explain(root, cfg, args.paths).print()
             if not args.base:
                 raise HarnessError("tdd needs --base (or --explain)")
             report = tdd.check_test_first(root, cfg, args.base).extend(tdd.check_weakened_tests(root, cfg, args.base))
