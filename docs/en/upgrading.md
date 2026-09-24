@@ -76,6 +76,28 @@ Then add that public key to GitHub under Settings → SSH and GPG keys as a **si
 with the same contents does not count; the API reports it separately and the check will keep failing. With more
 than one person, leave `separation_of_duties = true`, which is still the default and still requires the review.
 
+**Then choose how pull requests are merged, because one method throws the signature away.** GitHub's
+*Rebase and merge* rewrites every commit onto `main`, and the rewritten commits are unsigned. The harness's gate is
+unaffected — it checks the signature inside the pull request, and the signed originals stay attached to the pull
+request on GitHub — but `main` no longer shows who signed each approval, and an audit that reads only `main` finds
+nothing. What each method leaves on `main`:
+
+| Method | Signature on `main` | History |
+|---|---|---|
+| Rebase and merge | none | linear |
+| Squash and merge | GitHub's key, with you as author | linear, one commit per pull request |
+| Create a merge commit | **yours, on every original commit** | merge commits |
+
+Then make the choice a setting, not something to remember on every pull request:
+
+1. In Settings → General, turn off **Allow rebase merging**.
+2. In the branch protection for `main`, turn on **Require signed commits**. GitHub then refuses anything unsigned that
+   reaches `main`. Squash and merge commits are signed by GitHub, and so are Dependabot's, so they still pass.
+
+If `main` also has **Require linear history**, merge commits are refused and squash is the only method left that
+keeps `main` signed. That is a sound combination: the approver's own signature was verified in the pull request, and
+it stays there.
+
 ### What you gain
 
 - **`sdlc amend <change> <artifact> --as <user> --role <role>`** shows the approver what changed since their

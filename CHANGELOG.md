@@ -5,6 +5,16 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-09-24
+
+### Added
+- Merge-method guidance for the single-maintainer mode, in the upgrade notes, the playbook, the reference guide and
+  the `roster.toml` comment. GitHub's *Rebase and merge* rewrites the approver's signed commits as unsigned ones on
+  `main`: the gate is unaffected, because it verifies the signature inside the pull request, but `main` no longer
+  shows who signed each approval. The docs compare the three methods, say to turn off rebase merging and require
+  signed commits on `main`, and note that with *Require linear history* squash is the only method that keeps `main`
+  signed. Found when a repository running the harness merged its upgrade by rebase.
+
 ## [0.7.3] - 2026-09-24
 
 From a second round of field feedback. Each fix removes a reason to write worse documentation to get past a gate.

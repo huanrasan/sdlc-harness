@@ -53,7 +53,7 @@ nearly all of them, including `plan.md`, `verification.md`, `review.md`, `ux.md`
 ## 2. One-time setup — the platform role
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.3
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.4
 sdlc init path/to/repo --interactive          # asks profile, agents, CI, roster; --adopt for an existing repo
 cd path/to/repo
 python3 .harness/sdlc.pyz hooks               # pre-commit gates and commit-message check
@@ -68,8 +68,10 @@ WARN  roster: role 'product-owner' has no members (approves spec.md, discovery.m
 ```
 
 Commit `.github/workflows/`, enable branch protection with the `harness` check required, and — if you are the only
-maintainer — set `separation_of_duties = false` and turn on commit signing, per the
-[upgrade notes](upgrading.md#if-you-are-the-only-maintainer-turn-on-commit-signing).
+maintainer — set `separation_of_duties = false`, turn on commit signing, **turn off rebase merging** and require
+signed commits on `main`, per the
+[upgrade notes](upgrading.md#if-you-are-the-only-maintainer-turn-on-commit-signing). Rebase merging rewrites your
+signed commits into unsigned ones on `main`.
 
 ## 3. Phase by phase
 

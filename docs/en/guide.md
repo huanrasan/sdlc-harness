@@ -154,7 +154,8 @@ digests to `release.md` and amend.
 With `separation_of_duties = false` in `.harness/roster.toml`, for a repository with a single maintainer who cannot
 approve their own pull request, a commit signature the platform verifies replaces the platform review: the receipt
 must arrive in a commit signed by the approver, with the signing key registered on the platform. See the
-[upgrade notes](upgrading.md#if-you-are-the-only-maintainer-turn-on-commit-signing) for the one-time setup.
+[upgrade notes](upgrading.md#if-you-are-the-only-maintainer-turn-on-commit-signing) for the one-time setup,
+including why rebase merging must be off: it rewrites the signed commits into unsigned ones on `main`.
 In CI, `sdlc approvals verify` confirms with the GitHub or GitLab API that the named person approved a commit containing
 that exact content and the receipt, belongs to the role (directly or via a team), and, with `separation_of_duties`,
 did not author the pull request or the artifact. Every change also keeps a hash-chained `audit.jsonl`; CI rejects

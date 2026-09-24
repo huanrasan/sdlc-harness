@@ -56,7 +56,7 @@ todos, incluidos `plan.md`, `verification.md`, `review.md`, `ux.md`, `cost.md` y
 ## 2. Instalación por única vez — el rol `platform`
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.3
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.4
 sdlc init ruta/al/repo --interactive          # pregunta perfil, agentes, CI y roster; --adopt en un repo existente
 cd ruta/al/repo
 python3 .harness/sdlc.pyz hooks               # compuertas en pre-commit y chequeo del mensaje de commit
@@ -71,8 +71,10 @@ WARN  roster: role 'product-owner' has no members (approves spec.md, discovery.m
 ```
 
 Commiteá `.github/workflows/`, activá la protección de rama exigiendo el check `harness` y —si sos la única persona
-que mantiene el repositorio— poné `separation_of_duties = false` y activá la firma de commits, según las
+que mantiene el repositorio— poné `separation_of_duties = false`, activá la firma de commits, **desactivá el
+rebase merge** y exigí commits firmados en `main`, según las
 [notas de actualización](actualizar.md#si-sos-la-única-persona-que-mantiene-el-repositorio-activá-la-firma-de-commits).
+El rebase merge convierte tus commits firmados en commits sin firma dentro de `main`.
 
 ## 3. Fase por fase
 
