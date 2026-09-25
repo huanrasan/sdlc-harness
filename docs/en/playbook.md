@@ -53,7 +53,7 @@ nearly all of them, including `plan.md`, `verification.md`, `review.md`, `ux.md`
 ## 2. One-time setup — the platform role
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.5
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.6
 sdlc init path/to/repo --interactive          # asks profile, agents, CI, roster; --adopt for an existing repo
 cd path/to/repo
 python3 .harness/sdlc.pyz hooks               # pre-commit gates and commit-message check

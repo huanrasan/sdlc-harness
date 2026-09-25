@@ -5,6 +5,16 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.6] - 2026-09-24
+
+### Fixed
+- On Python older than 3.11 the vendored CLI died with a bare `SyntaxError` on a `match` statement, which says nothing
+  about the cause and arrives just as easily from a git hook as from a terminal. The package now checks the version
+  before anything else is compiled and says which interpreter ran, that 3.11 or newer is needed, and that git hooks
+  use the first `python3` on PATH. It covers the vendored `.harness/sdlc.pyz`, `sdlc-full.pyz` and
+  `python -m sdlc_harness`; `pip`/`pipx` already refused old interpreters through `requires-python`. A test keeps the
+  check itself parseable by Python 3.7. Found when a tool shell resolved macOS's Python 3.9.
+
 ## [0.7.5] - 2026-09-24
 
 ### Fixed
