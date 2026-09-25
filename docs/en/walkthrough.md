@@ -323,6 +323,7 @@ The gate always names the file and what is missing. The most frequent messages:
 | `exception for 'X' expired on ...` | time-boxed exception ended | fix the finding or renew it with a security approver |
 | `skills index is stale` / `adapter ... out of sync` | skills changed | `python3 .harness/sdlc.pyz sync` |
 | `INDEX.md is stale` | memory entry added by hand | `python3 .harness/sdlc.pyz memory index` |
+| `requires Python 3.11 or newer; this is Python 3.9` | the `python3` on PATH is too old; often macOS's own, and git hooks use whatever `python3` comes first | run with a newer interpreter, or put one first on PATH |
 | `cannot skip phases: spec -> implement` | tried to jump phases | advance one phase at a time |
 | `policy ...: sensor 'X' is 'warn', organization requires 'error'` | below the organization minimum | raise the level or register a deviation with an expiry |
 

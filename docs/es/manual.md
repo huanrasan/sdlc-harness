@@ -56,7 +56,7 @@ todos, incluidos `plan.md`, `verification.md`, `review.md`, `ux.md`, `cost.md` y
 ## 2. Instalación por única vez — el rol `platform`
 
 ```bash
-pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.5
+pipx install git+https://github.com/huanrasan/sdlc-harness@v0.7.6
 sdlc init ruta/al/repo --interactive          # pregunta perfil, agentes, CI y roster; --adopt en un repo existente
 cd ruta/al/repo
 python3 .harness/sdlc.pyz hooks               # compuertas en pre-commit y chequeo del mensaje de commit

@@ -331,6 +331,7 @@ La compuerta siempre nombra el archivo y qué falta. Los mensajes más frecuente
 | `exception for 'X' expired on ...` | venció la excepción | arreglar el hallazgo o renovarla con un aprobador de seguridad |
 | `skills index is stale` / `adapter ... out of sync` | cambiaron las skills | `python3 .harness/sdlc.pyz sync` |
 | `INDEX.md is stale` | se agregó memoria a mano | `python3 .harness/sdlc.pyz memory index` |
+| `requires Python 3.11 or newer; this is Python 3.9` | el `python3` del PATH es demasiado viejo; suele ser el de macOS, y los git hooks usan el primer `python3` que encuentran | ejecutarlo con un intérprete más nuevo, o ponerlo primero en el PATH |
 | `cannot skip phases: spec -> implement` | se intentó saltar fases | avanzar de a una fase |
 | `policy ...: sensor 'X' is 'warn', organization requires 'error'` | por debajo del mínimo de la organización | subir el nivel o registrar una desviación con vencimiento |
 

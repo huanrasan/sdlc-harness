@@ -197,6 +197,35 @@ class BaselineTests(HarnessCase):
         self.assertIn("awaits a human approver", out)
 
 
+class PythonVersionGuardTests(unittest.TestCase):
+    """On Python < 3.11 the vendored CLI died with a raw SyntaxError on `match`, from a git hook as easily as from a
+    terminal (found when a tool shell resolved macOS's Python 3.9). It must say what is wrong and how to fix it."""
+
+    def test_an_old_python_gets_a_clear_message_and_no_traceback(self):
+        import subprocess
+        import sys
+        from helpers import ROOT
+        code = ("import sys; sys.version_info = (3, 9, 6, 'final', 0); "
+                f"sys.path.insert(0, {str(ROOT / 'src')!r}); import sdlc_harness")
+        proc = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 2, proc.stderr)
+        self.assertIn("requires Python 3.11 or newer", proc.stderr)
+        self.assertIn("3.9", proc.stderr)
+        self.assertIn("git hook", proc.stderr)
+        self.assertNotIn("Traceback", proc.stderr)
+
+    def test_the_guard_itself_parses_on_old_pythons(self):
+        """If the guard used modern syntax, old interpreters would fail before reaching it."""
+        import ast
+        from helpers import ROOT
+        source = (ROOT / "src/sdlc_harness/__init__.py").read_text()
+        ast.parse(source, feature_version=(3, 7))
+
+    def test_a_supported_python_imports_normally(self):
+        import sdlc_harness
+        self.assertTrue(sdlc_harness.__version__)
+
+
 class VendoredCliLimitsTests(unittest.TestCase):
     """The vendored `.harness/sdlc.pyz` has no templates; commands that need them must say so, not crash.
 
